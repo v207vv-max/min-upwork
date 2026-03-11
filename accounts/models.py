@@ -78,6 +78,8 @@ class UserManager(BaseUserManager):
             raise ValueError("Superuser must have is_superuser=True.")
         if not password:
             raise ValueError("Superuser must have a password.")
+        if not extra_fields.get("email") and not extra_fields.get("phone_number"):
+            raise ValueError("Superuser must have either email or phone number.")
 
         return self._create_user(username=username, password=password, **extra_fields)
 
@@ -115,7 +117,7 @@ class User(AbstractUser):
     objects = UserManager()
 
     USERNAME_FIELD = "username"
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ["email"]
 
     class Meta:
         ordering = ["-created_at"]
