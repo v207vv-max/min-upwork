@@ -1,0 +1,127 @@
+from django.core.exceptions import ValidationError
+from django.db import transaction
+
+from projects.models import ProjectStatus
+
+from .models import Bid, BidStatus
+
+
+def create_bid(*, project, freelancer, proposal, price, delivery_time_days):
+    """
+    Create a new bid for a project.
+    """
+
+    if not getattr(freelancer, "is_freelancer", False):
+        raise ValidationError("Only freelancers can create bids.")
+
+    if project.client_id == freelancer.id:
+        raise ValidationError("You cannot bid on your own project.")
+
+    if project.status != ProjectStatus.OPEN:
+        raise ValidationError("You can only bid on open projects.")
+
+    if not project.is_active:
+        raise ValidationError("You cannot bid on an inactive project.")
+
+    if Bid.objects.filter(project=project, freelancer=freelancer).exists():
+        raise ValidationError("You have already submitted a bid for this project.")
+
+    bid = Bid.objects.create(
+        project=project,
+        freelancer=freelancer,
+        proposal=proposal,
+        price=price,
+        delivery_time_days=delivery_time_days,
+    )
+
+    return bid
+
+
+def update_bid(*, bid, freelancer, proposal, price, delivery_time_days):
+    """
+    Update an existing bid.
+    """
+
+    if bid.freelancer != freelancer:
+        raise ValidationError("You can update only your own bid.")
+
+    if bid.status != BidStatus.PENDING:
+        raise ValidationError("Only pending bids can be updated.")
+
+    bid.proposal = proposal
+    bid.price = price
+    bid.delivery_time_days = delivery_time_days
+    bid.save()
+
+    return bid
+
+
+def withdraw_bid(*, bid, freelancer):
+    """
+    Withdraw a pending bid.
+    """
+
+    if bid.freelancer != freelancer:
+        raise ValidationError("You can withdraw only your own bid.")
+
+    if bid.status != BidStatus.PENDING:
+        raise ValidationError("Only pending bids can be withdrawn.")
+
+    bid.status = BidStatus.WITHDRAWN
+    bid.save(update_fields=["status", "updated_at"])
+
+    return bid
+
+
+@transaction.atomic
+def accept_bid(*, bid, client):
+    """
+    Accept one bid, reject all other pending bids for the same project,
+    and move the project to in_progress status.
+    """
+
+    project = bid.project
+
+    if project.client != client:
+        raise ValidationError("You can accept bids only for your own projects.")
+
+    if project.status != ProjectStatus.OPEN:
+        raise ValidationError("Bids can only be accepted for open projects.")
+
+    if not project.is_active:
+        raise ValidationError("This project is inactive.")
+
+    if bid.status != BidStatus.PENDING:
+        raise ValidationError("Only pending bids can be accepted.")
+
+    bid.status = BidStatus.ACCEPTED
+    bid.save(update_fields=["status", "updated_at"])
+
+    Bid.objects.filter(
+        project=project,
+        status=BidStatus.PENDING,
+    ).exclude(pk=bid.pk).update(
+        status=BidStatus.REJECTED,
+    )
+
+    project.status = ProjectStatus.IN_PROGRESS
+    project.save(update_fields=["status", "updated_at"])
+
+    return bid
+
+
+def reject_bid(*, bid, client):
+    """
+    Reject a pending bid.
+    """
+
+    if bid.project.client != client:
+        raise ValidationError("You can reject bids only for your own projects.")
+
+    if bid.status != BidStatus.PENDING:
+        raise ValidationError("Only pending bids can be rejected.")
+
+    bid.status = BidStatus.REJECTED
+    bid.save(update_fields=["status", "updated_at"])
+
+    return bid
