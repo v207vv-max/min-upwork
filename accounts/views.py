@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.core.exceptions import ValidationError
 
 from .forms import (
     ChangePasswordForm,
@@ -30,24 +31,27 @@ def signup_view(request):
     form = SignUpForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
-        user = register_user(
-            username=form.cleaned_data["username"],
-            password=form.cleaned_data["password"],
-            role=form.cleaned_data["role"],
-            email=form.cleaned_data.get("email"),
-            phone_number=form.cleaned_data.get("phone_number"),
-        )
+        try:
+            user = register_user(
+                username=form.cleaned_data["username"],
+                password=form.cleaned_data["password"],
+                role=form.cleaned_data["role"],
+                email=form.cleaned_data.get("email"),
+                phone_number=form.cleaned_data.get("phone_number"),
+            )
 
-        if form.cleaned_data.get("preferred_contact_method"):
-            user.preferred_contact_method = form.cleaned_data["preferred_contact_method"]
-            user.save(update_fields=["preferred_contact_method"])
+            if form.cleaned_data.get("preferred_contact_method"):
+                user.preferred_contact_method = form.cleaned_data["preferred_contact_method"]
+                user.save(update_fields=["preferred_contact_method"])
 
-        request.session["pending_user_id"] = user.id
-        messages.success(request, "Verification code was sent successfully.")
-        return redirect("accounts:verify-signup-code")
+            request.session["pending_user_id"] = user.id
+            messages.success(request, "Verification code was sent successfully.")
+            return redirect("accounts:verify-signup-code")
+
+        except ValidationError as e:
+            form.add_error(None, str(e))
 
     return render(request, "accounts/signup.html", {"form": form})
-
 
 def verify_signup_code_view(request):
     if request.user.is_authenticated:
@@ -62,14 +66,17 @@ def verify_signup_code_view(request):
     form = VerifyCodeForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
-        user = verify_signup_code(
-            user=user,
-            code=form.cleaned_data["code"],
-        )
-        request.session.pop("pending_user_id", None)
-        login(request, user)
-        messages.success(request, "Account verified successfully.")
-        return redirect("accounts:profile")
+        try:
+            user = verify_signup_code(
+                user=user,
+                code=form.cleaned_data["code"],
+            )
+            request.session.pop("pending_user_id", None)
+            login(request, user)
+            messages.success(request, "Account verified successfully.")
+            return redirect("accounts:profile")
+        except ValidationError as e:
+            form.add_error(None, str(e))
 
     return render(
         request,
@@ -85,14 +92,16 @@ def login_view(request):
     form = LoginForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
-        user = authenticate_user(
-            identifier=form.cleaned_data["identifier"],
-            password=form.cleaned_data["password"],
-        )
-        login(request, user)
-        messages.success(request, "You logged in successfully.")
-        return redirect("accounts:profile")
-
+        try:
+            user = authenticate_user(
+                identifier=form.cleaned_data["identifier"],
+                password=form.cleaned_data["password"],
+            )
+            login(request, user)
+            messages.success(request, "You logged in successfully.")
+            return redirect("accounts:profile")
+        except ValidationError as e:
+            form.add_error(None, str(e))
     return render(request, "accounts/login.html", {"form": form})
 
 
@@ -113,10 +122,12 @@ def profile_update_view(request):
     form = ProfileUpdateForm(request.POST or None, instance=request.user)
 
     if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "Profile updated successfully.")
-        return redirect("accounts:profile")
-
+        try:
+            form.save()
+            messages.success(request, "Profile updated successfully.")
+            return redirect("accounts:profile")
+        except ValidationError as e:
+            form.add_error(None, str(e))
     return render(request, "accounts/profile_update.html", {"form": form})
 
 
@@ -127,13 +138,16 @@ def forgot_password_view(request):
     form = ForgotPasswordForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
-        user = request_password_reset(
-            identifier=form.cleaned_data["identifier"],
-        )
+        try:
+            user = request_password_reset(
+                identifier=form.cleaned_data["identifier"],
+            )
 
-        request.session["reset_user_id"] = user.id
-        messages.success(request, "Password reset code was sent.")
-        return redirect("accounts:reset-password")
+            request.session["reset_user_id"] = user.id
+            messages.success(request, "Password reset code was sent.")
+            return redirect("accounts:reset-password")
+        except ValidationError as e:
+            form.add_error(None, str(e))
 
     return render(request, "accounts/forgot_password.html", {"form": form})
 
@@ -151,14 +165,17 @@ def reset_password_view(request):
     form = ResetPasswordForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
-        reset_password(
-            user=user,
-            code=form.cleaned_data["code"],
-            new_password=form.cleaned_data["new_password"],
-        )
-        request.session.pop("reset_user_id", None)
-        messages.success(request, "Password was reset successfully.")
-        return redirect("accounts:login")
+        try:
+            reset_password(
+                user=user,
+                code=form.cleaned_data["code"],
+                new_password=form.cleaned_data["new_password"],
+            )
+            request.session.pop("reset_user_id", None)
+            messages.success(request, "Password was reset successfully.")
+            return redirect("accounts:login")
+        except ValidationError as e:
+            form.add_error(None, str(e))
 
     return render(
         request,
@@ -172,13 +189,16 @@ def change_password_view(request):
     form = ChangePasswordForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
-        change_password(
-            user=request.user,
-            old_password=form.cleaned_data["old_password"],
-            new_password=form.cleaned_data["new_password"],
-        )
-        messages.success(request, "Password changed successfully. Please log in again.")
-        logout(request)
-        return redirect("accounts:login")
+        try:
+            change_password(
+                user=request.user,
+                old_password=form.cleaned_data["old_password"],
+                new_password=form.cleaned_data["new_password"],
+            )
+            messages.success(request, "Password changed successfully. Please log in again.")
+            logout(request)
+            return redirect("accounts:login")
+        except ValidationError as e:
+            form.add_error(None, str(e))
 
     return render(request, "accounts/change_password.html", {"form": form})
