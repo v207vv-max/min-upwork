@@ -1,3 +1,179 @@
-from django.shortcuts import render
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.shortcuts import get_object_or_404, redirect, render
 
-# Create your views here.
+from .forms import ProjectCreateForm, ProjectUpdateForm
+from .models import Project, ProjectStatus
+
+
+def project_list_view(request):
+    projects = Project.objects.select_related("client").filter(
+        status=ProjectStatus.OPEN,
+        is_active=True,
+    )
+
+    return render(
+        request,
+        "projects/project_list.html",
+        {"projects": projects},
+    )
+
+
+def project_detail_view(request, pk):
+    project = get_object_or_404(
+        Project.objects.select_related("client"),
+        pk=pk,
+    )
+
+    return render(
+        request,
+        "projects/project_detail.html",
+        {"project": project},
+    )
+
+
+@login_required
+def my_projects_view(request):
+    if not request.user.is_client:
+        raise PermissionDenied("Only clients can view their projects.")
+
+    projects = Project.objects.select_related("client").filter(
+        client=request.user,
+    )
+
+    return render(
+        request,
+        "projects/my_projects.html",
+        {"projects": projects},
+    )
+
+
+@login_required
+def project_create_view(request):
+    if not request.user.is_client:
+        raise PermissionDenied("Only clients can create projects.")
+
+    form = ProjectCreateForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        try:
+            project = form.save(commit=False)
+            project.client = request.user
+            project.save()
+
+            messages.success(request, "Project created successfully.")
+            return redirect("projects:project-detail", pk=project.pk)
+
+        except ValidationError as e:
+            form.add_error(None, str(e))
+
+    return render(
+        request,
+        "projects/project_create.html",
+        {"form": form},
+    )
+
+
+@login_required
+def project_update_view(request, pk):
+    if not request.user.is_client:
+        raise PermissionDenied("Only clients can update projects.")
+
+    project = get_object_or_404(
+        Project.objects.select_related("client"),
+        pk=pk,
+        client=request.user,
+    )
+
+    if not project.is_editable:
+        messages.error(request, "Only open projects can be edited.")
+        return redirect("projects:project-detail", pk=project.pk)
+
+    form = ProjectUpdateForm(request.POST or None, instance=project)
+
+    if request.method == "POST" and form.is_valid():
+        try:
+            project = form.save()
+            messages.success(request, "Project updated successfully.")
+            return redirect("projects:project-detail", pk=project.pk)
+
+        except ValidationError as e:
+            form.add_error(None, str(e))
+
+    return render(
+        request,
+        "projects/project_update.html",
+        {
+            "form": form,
+            "project": project,
+        },
+    )
+
+
+@login_required
+def project_cancel_view(request, pk):
+    if not request.user.is_client:
+        raise PermissionDenied("Only clients can cancel projects.")
+
+    project = get_object_or_404(
+        Project.objects.select_related("client"),
+        pk=pk,
+        client=request.user,
+    )
+
+    if project.status == ProjectStatus.CANCELLED:
+        messages.info(request, "Project is already cancelled.")
+        return redirect("projects:project-detail", pk=project.pk)
+
+    if project.status == ProjectStatus.COMPLETED:
+        messages.error(request, "Completed project cannot be cancelled.")
+        return redirect("projects:project-detail", pk=project.pk)
+
+    if request.method == "POST":
+        project.status = ProjectStatus.CANCELLED
+        project.is_active = False
+        project.save(update_fields=["status", "is_active", "updated_at"])
+
+        messages.success(request, "Project cancelled successfully.")
+        return redirect("projects:project-detail", pk=project.pk)
+
+    return render(
+        request,
+        "projects/project_cancel.html",
+        {"project": project},
+    )
+
+
+@login_required
+def project_complete_view(request, pk):
+    if not request.user.is_client:
+        raise PermissionDenied("Only clients can complete projects.")
+
+    project = get_object_or_404(
+        Project.objects.select_related("client"),
+        pk=pk,
+        client=request.user,
+    )
+
+    if project.status == ProjectStatus.COMPLETED:
+        messages.info(request, "Project is already completed.")
+        return redirect("projects:project-detail", pk=project.pk)
+
+    if project.status == ProjectStatus.CANCELLED:
+        messages.error(request, "Cancelled project cannot be completed.")
+        return redirect("projects:project-detail", pk=project.pk)
+
+    if request.method == "POST":
+        project.status = ProjectStatus.COMPLETED
+        project.is_active = False
+        project.save(update_fields=["status", "is_active", "updated_at"])
+
+        messages.success(request, "Project marked as completed.")
+        return redirect("projects:project-detail", pk=project.pk)
+
+    return render(
+        request,
+        "projects/project_complete.html",
+        {"project": project},
+    )
