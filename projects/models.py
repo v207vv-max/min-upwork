@@ -2,13 +2,14 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 
 class ProjectStatus(models.TextChoices):
-    OPEN = "open", "Open"
-    IN_PROGRESS = "in_progress", "In progress"
-    COMPLETED = "completed", "Completed"
-    CANCELLED = "cancelled", "Cancelled"
+    OPEN = "open", _("Open")
+    IN_PROGRESS = "in_progress", _("In progress")
+    COMPLETED = "completed", _("Completed")
+    CANCELLED = "cancelled", _("Cancelled")
 
 
 class Project(models.Model):
@@ -29,7 +30,7 @@ class Project(models.Model):
     skills_required = models.CharField(
         max_length=255,
         blank=True,
-        help_text="Optional. Example: Python, Django, DRF, PostgreSQL",
+        help_text=_("Optional. Example: Python, Django, DRF, PostgreSQL"),
     )
     is_active = models.BooleanField(default=True)
 
@@ -54,7 +55,7 @@ class Project(models.Model):
         super().clean()
 
         if self.client_id and getattr(self.client, "role", None) != "client":
-            raise ValidationError({"client": "Only clients can create projects."})
+            raise ValidationError({"client": _("Only clients can create projects.")})
 
         if self.title:
             self.title = self.title.strip()
@@ -63,17 +64,17 @@ class Project(models.Model):
             self.skills_required = self.skills_required.strip()
 
         if not self.title:
-            raise ValidationError({"title": "Title cannot be empty."})
+            raise ValidationError({"title": _("Title cannot be empty.")})
 
         if self.budget is None or self.budget <= 0:
-            raise ValidationError({"budget": "Budget must be greater than 0."})
+            raise ValidationError({"budget": _("Budget must be greater than 0.")})
 
         if self.deadline and self.deadline < timezone.localdate():
-            raise ValidationError({"deadline": "Deadline cannot be in the past."})
+            raise ValidationError({"deadline": _("Deadline cannot be in the past.")})
 
         if self.status in [ProjectStatus.COMPLETED, ProjectStatus.CANCELLED] and self.is_active:
             raise ValidationError(
-                {"is_active": "Completed or cancelled project cannot remain active."}
+                {"is_active": _("Completed or cancelled project cannot remain active.")}
             )
 
     def save(self, *args, **kwargs):

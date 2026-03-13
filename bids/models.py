@@ -1,15 +1,16 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from projects.models import Project, ProjectStatus
 
 
 class BidStatus(models.TextChoices):
-    PENDING = "pending", "Pending"
-    ACCEPTED = "accepted", "Accepted"
-    REJECTED = "rejected", "Rejected"
-    WITHDRAWN = "withdrawn", "Withdrawn"
+    PENDING = "pending", _("Pending")
+    ACCEPTED = "accepted", _("Accepted")
+    REJECTED = "rejected", _("Rejected")
+    WITHDRAWN = "withdrawn", _("Withdrawn")
 
 
 class Bid(models.Model):

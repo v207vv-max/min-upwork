@@ -3,9 +3,10 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth import authenticate
+from django.core.mail import send_mail
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from django.core.mail import send_mail
+from django.utils.translation import gettext_lazy as _
 
 from .models import (
     User,
@@ -63,7 +64,7 @@ def register_user(
     """Register user and send verification code."""
 
     if not email and not phone_number:
-        raise ValidationError("Email or phone number must be provided")
+        raise ValidationError(_("Email or phone number must be provided"))
 
     user = User.objects.create_user(
         username=username,
@@ -105,11 +106,11 @@ def verify_signup_code(*, user, code):
             status=VerificationStatus.NEW,
         )
     except VerificationCode.DoesNotExist:
-        raise ValidationError("Invalid verification code")
+        raise ValidationError(_("Invalid verification code"))
 
     if verification.is_expired:
         verification.mark_expired()
-        raise ValidationError("Verification code expired")
+        raise ValidationError(_("Verification code expired"))
 
     verification.mark_used()
 
@@ -142,15 +143,15 @@ def authenticate_user(identifier, password):
     )
 
     if not user:
-        raise ValidationError("User not found")
+        raise ValidationError(_("User not found"))
 
     user = authenticate(username=user.username, password=password)
 
     if not user:
-        raise ValidationError("Invalid password")
+        raise ValidationError(_("Invalid password"))
 
     if not user.is_active:
-        raise ValidationError("User account is not active")
+        raise ValidationError(_("User account is not active"))
 
     return user
 
@@ -171,7 +172,7 @@ def request_password_reset(identifier):
     )
 
     if not user:
-        raise ValidationError("User not found")
+        raise ValidationError(_("User not found"))
 
     channel, target = resolve_contact_channel_and_target(
         email=user.email,
@@ -204,11 +205,11 @@ def reset_password(*, user, code, new_password):
             status=VerificationStatus.NEW,
         )
     except VerificationCode.DoesNotExist:
-        raise ValidationError("Invalid verification code")
+        raise ValidationError(_("Invalid verification code"))
 
     if verification.is_expired:
         verification.mark_expired()
-        raise ValidationError("Verification code expired")
+        raise ValidationError(_("Verification code expired"))
 
     verification.mark_used()
 
@@ -226,7 +227,7 @@ def change_password(*, user, old_password, new_password):
     """Change password for logged in user."""
 
     if not user.check_password(old_password):
-        raise ValidationError("Old password is incorrect")
+        raise ValidationError(_("Old password is incorrect"))
 
     user.set_password(new_password)
     user.save(update_fields=["password"])
@@ -246,7 +247,7 @@ def resolve_contact_channel_and_target(*, email=None, phone_number=None, preferr
     if phone_number:
         return VerificationChannel.PHONE, phone_number
 
-    raise ValidationError("Email or phone number must be provided.")
+    raise ValidationError(_("Email or phone number must be provided."))
 
 
 def send_verification_code_email(*, to_email, code, purpose):

@@ -1,8 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, redirect, render
 from django.core.exceptions import ValidationError
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.translation import gettext_lazy as _
 
 from .forms import (
     ChangePasswordForm,
@@ -44,7 +45,7 @@ def signup_view(request):
 
 
             request.session["pending_user_id"] = user.id
-            messages.success(request, "Verification code was sent successfully.")
+            messages.success(request, _("Verification code was sent successfully."))
             return redirect("accounts:verify-signup-code")
 
         except ValidationError as e:
@@ -58,7 +59,7 @@ def verify_signup_code_view(request):
 
     user_id = request.session.get("pending_user_id")
     if not user_id:
-        messages.error(request, "No pending signup session found.")
+        messages.error(request, _("No pending signup session found."))
         return redirect("accounts:signup")
 
     user = get_object_or_404(User, id=user_id)
@@ -72,7 +73,7 @@ def verify_signup_code_view(request):
             )
             request.session.pop("pending_user_id", None)
             login(request, user)
-            messages.success(request, "Account verified successfully.")
+            messages.success(request, _("Account verified successfully."))
             return redirect("accounts:profile")
         except ValidationError as e:
             form.add_error(None, str(e))
@@ -97,7 +98,7 @@ def login_view(request):
                 password=form.cleaned_data["password"],
             )
             login(request, user)
-            messages.success(request, "You logged in successfully.")
+            messages.success(request, _("You logged in successfully."))
             return redirect("accounts:profile")
         except ValidationError as e:
             form.add_error(None, str(e))
@@ -107,7 +108,7 @@ def login_view(request):
 @login_required
 def logout_view(request):
     logout(request)
-    messages.success(request, "You logged out successfully.")
+    messages.success(request, _("You logged out successfully."))
     return redirect("accounts:login")
 
 
@@ -123,7 +124,7 @@ def profile_update_view(request):
     if request.method == "POST" and form.is_valid():
         try:
             form.save()
-            messages.success(request, "Profile updated successfully.")
+            messages.success(request, _("Profile updated successfully."))
             return redirect("accounts:profile")
         except ValidationError as e:
             form.add_error(None, str(e))
@@ -143,7 +144,7 @@ def forgot_password_view(request):
             )
 
             request.session["reset_user_id"] = user.id
-            messages.success(request, "Password reset code was sent.")
+            messages.success(request, _("Password reset code was sent."))
             return redirect("accounts:reset-password")
         except ValidationError as e:
             form.add_error(None, str(e))
@@ -157,7 +158,7 @@ def reset_password_view(request):
 
     user_id = request.session.get("reset_user_id")
     if not user_id:
-        messages.error(request, "No password reset request found.")
+        messages.error(request, _("No password reset request found."))
         return redirect("accounts:forgot-password")
 
     user = get_object_or_404(User, id=user_id)
@@ -171,7 +172,7 @@ def reset_password_view(request):
                 new_password=form.cleaned_data["new_password"],
             )
             request.session.pop("reset_user_id", None)
-            messages.success(request, "Password was reset successfully.")
+            messages.success(request, _("Password was reset successfully."))
             return redirect("accounts:login")
         except ValidationError as e:
             form.add_error(None, str(e))
@@ -194,7 +195,7 @@ def change_password_view(request):
                 old_password=form.cleaned_data["old_password"],
                 new_password=form.cleaned_data["new_password"],
             )
-            messages.success(request, "Password changed successfully. Please log in again.")
+            messages.success(request, _("Password changed successfully. Please log in again."))
             logout(request)
             return redirect("accounts:login")
         except ValidationError as e:

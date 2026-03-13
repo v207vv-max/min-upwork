@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 from .models import Message
 
@@ -37,9 +38,9 @@ class MessageCreateForm(forms.ModelForm):
             cleaned_data["text"] = text.strip()
 
         if not text and not image:
-            raise ValidationError("Message must contain text or image.")
+            raise ValidationError(_("Message must contain text or image."))
 
         if text and len(text) > 3000:
-            raise ValidationError("Message text cannot be longer than 3000 characters.")
+            raise ValidationError(_("Message text cannot be longer than 3000 characters."))
 
         return cleaned_data

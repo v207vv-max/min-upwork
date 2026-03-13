@@ -1,8 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.shortcuts import get_object_or_404, redirect, render
 from django.db import models
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.translation import gettext_lazy as _
 from .forms import MessageCreateForm
 from .models import Conversation
 from .services import mark_conversation_as_read, send_message
@@ -39,7 +40,7 @@ def conversation_detail_view(request, pk):
     )
 
     if not conversation.has_participant(request.user):
-        raise PermissionDenied("You do not have permission to view this conversation.")
+        raise PermissionDenied(_("You do not have permission to view this conversation."))
 
     mark_conversation_as_read(
         conversation=conversation,
@@ -56,7 +57,7 @@ def conversation_detail_view(request, pk):
                 text=form.cleaned_data.get("text", ""),
                 image=form.cleaned_data.get("image"),
             )
-            messages.success(request, "Message sent successfully.")
+            messages.success(request, _("Message sent successfully."))
             return redirect("chat:conversation-detail", pk=conversation.pk)
 
         except ValidationError as e:

@@ -2,15 +2,16 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from projects.models import Project
 from bids.models import Bid
 
 
 class ContractStatus(models.TextChoices):
-    ACTIVE = "active", "Active"
-    FINISHED = "finished", "Finished"
-    CANCELLED = "cancelled", "Cancelled"
+    ACTIVE = "active", _("Active")
+    FINISHED = "finished", _("Finished")
+    CANCELLED = "cancelled", _("Cancelled")
 
 
 class Contract(models.Model):

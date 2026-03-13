@@ -2,11 +2,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
-
+from django.utils.translation import gettext_lazy as _
 from .services import cancel_contract, finish_contract
-from django.core.exceptions import ValidationError
-
-
 from .models import Contract, ContractStatus
 
 @login_required
@@ -28,7 +25,7 @@ def contract_list_view(request):
         ).filter(freelancer=request.user)
 
     else:
-        raise PermissionDenied("You do not have permission to view contracts.")
+        raise PermissionDenied(_("You do not have permission to view contracts."))
 
     status = (request.GET.get("status") or "").strip()
     ordering = (request.GET.get("ordering") or "").strip()
@@ -71,7 +68,7 @@ def contract_detail_view(request, pk):
     is_freelancer_owner = contract.freelancer == request.user
 
     if not (is_client_owner or is_freelancer_owner):
-        raise PermissionDenied("You do not have permission to view this contract.")
+        raise PermissionDenied(_("You do not have permission to view this contract."))
 
     return render(
         request,
@@ -83,7 +80,7 @@ def contract_detail_view(request, pk):
 @login_required
 def contract_finish_view(request, pk):
     if not request.user.is_client:
-        raise PermissionDenied("Only clients can finish contracts.")
+        raise PermissionDenied(_("Only clients can finish contracts."))
 
     contract = get_object_or_404(
         Contract.objects.select_related(
@@ -102,7 +99,7 @@ def contract_finish_view(request, pk):
                 contract=contract,
                 client=request.user,
             )
-            messages.success(request, "Contract finished successfully.")
+            messages.success(request, _("Contract finished successfully."))
             return redirect("contracts:contract-detail", pk=contract.pk)
 
         except ValidationError as e:
@@ -119,7 +116,7 @@ def contract_finish_view(request, pk):
 @login_required
 def contract_cancel_view(request, pk):
     if not request.user.is_client:
-        raise PermissionDenied("Only clients can cancel contracts.")
+        raise PermissionDenied(_("Only clients can cancel contracts."))
 
     contract = get_object_or_404(
         Contract.objects.select_related(
@@ -138,7 +135,7 @@ def contract_cancel_view(request, pk):
                 contract=contract,
                 client=request.user,
             )
-            messages.success(request, "Contract cancelled successfully.")
+            messages.success(request, _("Contract cancelled successfully."))
             return redirect("contracts:contract-detail", pk=contract.pk)
 
         except ValidationError as e:

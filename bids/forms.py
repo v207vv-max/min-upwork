@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 from .models import Bid
 
@@ -20,10 +21,10 @@ class BidCreateForm(forms.ModelForm):
         proposal = self.cleaned_data["proposal"].strip()
 
         if not proposal:
-            raise ValidationError("Proposal cannot be empty.")
+            raise ValidationError(_("Proposal cannot be empty."))
 
         if len(proposal) < 20:
-            raise ValidationError("Proposal must contain at least 20 characters.")
+            raise ValidationError(_("Proposal must contain at least 20 characters."))
 
         return proposal
 
@@ -31,10 +32,10 @@ class BidCreateForm(forms.ModelForm):
         price = self.cleaned_data["price"]
 
         if price is None:
-            raise ValidationError("Price is required.")
+            raise ValidationError(_("Price is required."))
 
         if price <= 0:
-            raise ValidationError("Price must be greater than 0.")
+            raise ValidationError(_("Price must be greater than 0."))
 
         return price
 
@@ -42,10 +43,10 @@ class BidCreateForm(forms.ModelForm):
         delivery_time_days = self.cleaned_data["delivery_time_days"]
 
         if delivery_time_days is None:
-            raise ValidationError("Delivery time is required.")
+            raise ValidationError(_("Delivery time is required."))
 
         if delivery_time_days < 1:
-            raise ValidationError("Delivery time must be at least 1 day.")
+            raise ValidationError(_("Delivery time must be at least 1 day."))
 
         return delivery_time_days
 
@@ -75,10 +76,10 @@ class BidUpdateForm(forms.ModelForm):
         proposal = self.cleaned_data["proposal"].strip()
 
         if not proposal:
-            raise ValidationError("Proposal cannot be empty.")
+            raise ValidationError(_("Proposal cannot be empty."))
 
         if len(proposal) < 20:
-            raise ValidationError("Proposal must contain at least 20 characters.")
+            raise ValidationError(_("Proposal must contain at least 20 characters."))
 
         return proposal
 
@@ -86,10 +87,10 @@ class BidUpdateForm(forms.ModelForm):
         price = self.cleaned_data["price"]
 
         if price is None:
-            raise ValidationError("Price is required.")
+            raise ValidationError(_("Price is required."))
 
         if price <= 0:
-            raise ValidationError("Price must be greater than 0.")
+            raise ValidationError(_("Price must be greater than 0."))
 
         return price
 
@@ -97,10 +98,10 @@ class BidUpdateForm(forms.ModelForm):
         delivery_time_days = self.cleaned_data["delivery_time_days"]
 
         if delivery_time_days is None:
-            raise ValidationError("Delivery time is required.")
+            raise ValidationError(_("Delivery time is required."))
 
         if delivery_time_days < 1:
-            raise ValidationError("Delivery time must be at least 1 day.")
+            raise ValidationError(_("Delivery time must be at least 1 day."))
 
         return delivery_time_days
 

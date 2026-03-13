@@ -4,31 +4,32 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 
 class UserRole(models.TextChoices):
-    CLIENT = "client", "Client"
-    FREELANCER = "freelancer", "Freelancer"
+    CLIENT = "client", _("Client")
+    FREELANCER = "freelancer", _("Freelancer")
 
 
 class VerificationChannel(models.TextChoices):
-    EMAIL = "email", "Email"
-    PHONE = "phone", "Phone"
+    EMAIL = "email", _("Email")
+    PHONE = "phone", _("Phone")
 
 
 class VerificationPurpose(models.TextChoices):
-    SIGNUP = "signup", "Signup"
-    RESET_PASSWORD = "reset_password", "Reset password"
-    CHANGE_PASSWORD = "change_password", "Change password"
-    VERIFY_EMAIL = "verify_email", "Verify email"
-    VERIFY_PHONE = "verify_phone", "Verify phone"
+    SIGNUP = "signup", _("Signup")
+    RESET_PASSWORD = "reset_password", _("Reset password")
+    CHANGE_PASSWORD = "change_password", _("Change password")
+    VERIFY_EMAIL = "verify_email", _("Verify email")
+    VERIFY_PHONE = "verify_phone", _("Verify phone")
 
 
 class VerificationStatus(models.TextChoices):
-    NEW = "new", "New"
-    USED = "used", "Used"
-    EXPIRED = "expired", "Expired"
-    CANCELLED = "cancelled", "Cancelled"
+    NEW = "new", _("New")
+    USED = "used", _("Used")
+    EXPIRED = "expired", _("Expired")
+    CANCELLED = "cancelled", _("Cancelled")
 
 
 class UserManager(BaseUserManager):
@@ -42,10 +43,10 @@ class UserManager(BaseUserManager):
         phone_number = extra_fields.get("phone_number")
 
         if not username:
-            raise ValueError("The username field is required.")
+            raise ValueError(_("The username field is required."))
 
         if not email and not phone_number:
-            raise ValueError("Either email or phone number must be provided.")
+            raise ValueError(_("Either email or phone number must be provided."))
 
         if email:
             extra_fields["email"] = self.normalize_email(email).lower()
@@ -73,13 +74,13 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault("is_email_verified", True)
 
         if extra_fields.get("is_staff") is not True:
-            raise ValueError("Superuser must have is_staff=True.")
+            raise ValueError(_("Superuser must have is_staff=True."))
         if extra_fields.get("is_superuser") is not True:
-            raise ValueError("Superuser must have is_superuser=True.")
+            raise ValueError(_("Superuser must have is_superuser=True."))
         if not password:
-            raise ValueError("Superuser must have a password.")
+            raise ValueError(_("Superuser must have a password."))
         if not extra_fields.get("email") and not extra_fields.get("phone_number"):
-            raise ValueError("Superuser must have either email or phone number.")
+            raise ValueError(_("Superuser must have either email or phone number."))
 
         return self._create_user(username=username, password=password, **extra_fields)
 
@@ -89,14 +90,14 @@ class User(AbstractUser):
         unique=True,
         null=True,
         blank=True,
-        help_text="Optional. Must be unique if provided.",
+        help_text=_("Optional. Must be unique if provided."),
     )
     phone_number = models.CharField(
         max_length=20,
         unique=True,
         null=True,
         blank=True,
-        help_text="Optional. Must be unique if provided.",
+        help_text=_("Optional. Must be unique if provided."),
     )
     role = models.CharField(
         max_length=20,
@@ -143,16 +144,16 @@ class User(AbstractUser):
             self.phone_number = "".join(self.phone_number.strip().split())
 
         if not self.email and not self.phone_number:
-            raise ValidationError("User must have either email or phone number.")
+            raise ValidationError(_("User must have either email or phone number."))
 
         if self.preferred_contact_method == VerificationChannel.EMAIL and not self.email:
             raise ValidationError(
-                {"preferred_contact_method": "Preferred method is email, but email is empty."}
+                {"preferred_contact_method": _("Preferred method is email, but email is empty.")}
             )
 
         if self.preferred_contact_method == VerificationChannel.PHONE and not self.phone_number:
             raise ValidationError(
-                {"preferred_contact_method": "Preferred method is phone, but phone number is empty."}
+                {"preferred_contact_method": _("Preferred method is phone, but phone number is empty.")}
             )
 
     @property
@@ -209,11 +210,11 @@ class VerificationCode(models.Model):
 
     target = models.CharField(
         max_length=255,
-        help_text="Email address or phone number where the code was sent.",
+        help_text=_("Email address or phone number where the code was sent."),
     )
     code = models.CharField(
         max_length=10,
-        help_text="Verification code. Usually 4-6 digits.",
+        help_text=_("Verification code. Usually 4-6 digits."),
     )
 
     expires_at = models.DateTimeField()
@@ -249,10 +250,10 @@ class VerificationCode(models.Model):
             self.target = "".join((self.target or "").strip().split())
 
         if not self.code:
-            raise ValidationError({"code": "Code cannot be empty."})
+            raise ValidationError({"code": _("Code cannot be empty.")})
 
         if self.max_attempts < 1:
-            raise ValidationError({"max_attempts": "max_attempts must be at least 1."})
+            raise ValidationError({"max_attempts": _("max_attempts must be at least 1.")})
 
     def save(self, *args, **kwargs):
         if not self.expires_at:

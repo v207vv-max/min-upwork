@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.utils.translation import gettext_lazy as _
 
 from contracts.models import ContractStatus
 
@@ -13,7 +14,7 @@ def create_conversation_for_contract(*, contract):
     """
 
     if hasattr(contract, "conversation"):
-        raise ValidationError("Conversation for this contract already exists.")
+        raise ValidationError(_("Conversation for this contract already exists."))
 
     conversation = Conversation.objects.create(
         contract=contract,
@@ -31,15 +32,15 @@ def send_message(*, conversation, sender, text="", image=None):
     """
 
     if not conversation.has_participant(sender):
-        raise ValidationError("Only conversation participants can send messages.")
+        raise ValidationError(_("Only conversation participants can send messages."))
 
     if not conversation.can_send_messages:
-        raise ValidationError("You cannot send messages in this conversation.")
+        raise ValidationError(_("You cannot send messages in this conversation."))
 
     text = (text or "").strip()
 
     if not text and not image:
-        raise ValidationError("Message must contain text or image.")
+        raise ValidationError(_("Message must contain text or image."))
 
     message = Message.objects.create(
         conversation=conversation,
@@ -58,7 +59,7 @@ def mark_conversation_as_read(*, conversation, user):
     """
 
     if not conversation.has_participant(user):
-        raise ValidationError("Only conversation participants can access this chat.")
+        raise ValidationError(_("Only conversation participants can access this chat."))
 
     conversation.messages.filter(
         is_read=False,

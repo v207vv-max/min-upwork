@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.utils.translation import gettext_lazy as _
 
 from projects.models import ProjectStatus
 
@@ -13,19 +14,19 @@ def create_bid(*, project, freelancer, proposal, price, delivery_time_days):
     """
 
     if getattr(freelancer, "role", None) != "freelancer":
-        raise ValidationError("Only freelancers can create bids.")
+        raise ValidationError(_("Only freelancers can create bids."))
 
     if project.client == freelancer:
-        raise ValidationError("You cannot bid on your own project.")
+        raise ValidationError(_("You cannot bid on your own project."))
 
     if project.status != ProjectStatus.OPEN:
-        raise ValidationError("You can only bid on open projects.")
+        raise ValidationError(_("You can only bid on open projects."))
 
     if not project.is_active:
-        raise ValidationError("You cannot bid on an inactive project.")
+        raise ValidationError(_("You cannot bid on an inactive project."))
 
     if Bid.objects.filter(project=project, freelancer=freelancer).exists():
-        raise ValidationError("You have already submitted a bid for this project.")
+        raise ValidationError(_("You have already submitted a bid for this project."))
 
     return Bid.objects.create(
         project=project,
@@ -43,16 +44,16 @@ def accept_bid(*, bid, client):
     project = bid.project
 
     if project.client != client:
-        raise ValidationError("You can accept bids only for your own projects.")
+        raise ValidationError(_("You can accept bids only for your own projects."))
 
     if project.status != ProjectStatus.OPEN:
-        raise ValidationError("Bids can only be accepted for open projects.")
+        raise ValidationError(_("Bids can only be accepted for open projects."))
 
     if not project.is_active:
-        raise ValidationError("This project is inactive.")
+        raise ValidationError(_("This project is inactive."))
 
     if bid.status != BidStatus.PENDING:
-        raise ValidationError("Only pending bids can be accepted.")
+        raise ValidationError(_("Only pending bids can be accepted."))
 
     bid.status = BidStatus.ACCEPTED
     bid.save(update_fields=["status", "updated_at"])
@@ -78,10 +79,10 @@ def update_bid(*, bid, freelancer, proposal, price, delivery_time_days):
     """
 
     if bid.freelancer != freelancer:
-        raise ValidationError("You can update only your own bid.")
+        raise ValidationError(_("You can update only your own bid."))
 
     if bid.status != BidStatus.PENDING:
-        raise ValidationError("Only pending bids can be updated.")
+        raise ValidationError(_("Only pending bids can be updated."))
 
     bid.proposal = proposal
     bid.price = price
@@ -97,10 +98,10 @@ def withdraw_bid(*, bid, freelancer):
     """
 
     if bid.freelancer != freelancer:
-        raise ValidationError("You can withdraw only your own bid.")
+        raise ValidationError(_("You can withdraw only your own bid."))
 
     if bid.status != BidStatus.PENDING:
-        raise ValidationError("Only pending bids can be withdrawn.")
+        raise ValidationError(_("Only pending bids can be withdrawn."))
 
     bid.status = BidStatus.WITHDRAWN
     bid.save(update_fields=["status", "updated_at"])
@@ -114,10 +115,10 @@ def reject_bid(*, bid, client):
     """
 
     if bid.project.client != client:
-        raise ValidationError("You can reject bids only for your own projects.")
+        raise ValidationError(_("You can reject bids only for your own projects."))
 
     if bid.status != BidStatus.PENDING:
-        raise ValidationError("Only pending bids can be rejected.")
+        raise ValidationError(_("Only pending bids can be rejected."))
 
     bid.status = BidStatus.REJECTED
     bid.save(update_fields=["status", "updated_at"])

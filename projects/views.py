@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.translation import gettext_lazy as _
 
 from .forms import ProjectCreateForm, ProjectUpdateForm
 from .models import Project, ProjectStatus
@@ -39,7 +40,7 @@ def project_detail_view(request, pk):
 @login_required
 def my_projects_view(request):
     if not request.user.is_client:
-        raise PermissionDenied("Only clients can view their projects.")
+        raise PermissionDenied(_("Only clients can view their projects."))
 
     projects = Project.objects.select_related("client").filter(client=request.user)
     projects = filter_projects(projects, request.GET)
@@ -58,7 +59,7 @@ def my_projects_view(request):
 @login_required
 def project_create_view(request):
     if not request.user.is_client:
-        raise PermissionDenied("Only clients can create projects.")
+        raise PermissionDenied(_("Only clients can create projects."))
 
     form = ProjectCreateForm(request.POST or None)
 
@@ -68,7 +69,7 @@ def project_create_view(request):
             project.client = request.user
             project.save()
 
-            messages.success(request, "Project created successfully.")
+            messages.success(request, _("Project created successfully."))
             return redirect("projects:project-detail", pk=project.pk)
 
         except ValidationError as e:
@@ -84,7 +85,7 @@ def project_create_view(request):
 @login_required
 def project_update_view(request, pk):
     if not request.user.is_client:
-        raise PermissionDenied("Only clients can update projects.")
+        raise PermissionDenied(_("Only clients can update projects."))
 
     project = get_object_or_404(
         Project.objects.select_related("client"),
@@ -93,7 +94,7 @@ def project_update_view(request, pk):
     )
 
     if not project.is_editable:
-        messages.error(request, "Only open projects can be edited.")
+        messages.error(request, _("Only open projects can be edited."))
         return redirect("projects:project-detail", pk=project.pk)
 
     form = ProjectUpdateForm(request.POST or None, instance=project)
@@ -101,7 +102,7 @@ def project_update_view(request, pk):
     if request.method == "POST" and form.is_valid():
         try:
             project = form.save()
-            messages.success(request, "Project updated successfully.")
+            messages.success(request, _("Project updated successfully."))
             return redirect("projects:project-detail", pk=project.pk)
 
         except ValidationError as e:
@@ -120,7 +121,7 @@ def project_update_view(request, pk):
 @login_required
 def project_cancel_view(request, pk):
     if not request.user.is_client:
-        raise PermissionDenied("Only clients can cancel projects.")
+        raise PermissionDenied(_("Only clients can cancel projects."))
 
     project = get_object_or_404(
         Project.objects.select_related("client"),
@@ -131,16 +132,16 @@ def project_cancel_view(request, pk):
     if hasattr(project, "contract"):
         messages.error(
             request,
-            "This project already has a contract. Cancel it through the contract page."
+            _("This project already has a contract. Cancel it through the contract page.")
         )
         return redirect("projects:project-detail", pk=project.pk)
 
     if project.status == ProjectStatus.CANCELLED:
-        messages.info(request, "Project is already cancelled.")
+        messages.info(request, _("Project is already cancelled."))
         return redirect("projects:project-detail", pk=project.pk)
 
     if project.status == ProjectStatus.COMPLETED:
-        messages.error(request, "Completed project cannot be cancelled.")
+        messages.error(request, _("Completed project cannot be cancelled."))
         return redirect("projects:project-detail", pk=project.pk)
 
     if request.method == "POST":
@@ -148,7 +149,7 @@ def project_cancel_view(request, pk):
         project.is_active = False
         project.save(update_fields=["status", "is_active", "updated_at"])
 
-        messages.success(request, "Project cancelled successfully.")
+        messages.success(request, _("Project cancelled successfully."))
         return redirect("projects:project-detail", pk=project.pk)
 
     return render(
@@ -161,7 +162,7 @@ def project_cancel_view(request, pk):
 @login_required
 def project_complete_view(request, pk):
     if not request.user.is_client:
-        raise PermissionDenied("Only clients can complete projects.")
+        raise PermissionDenied(_("Only clients can complete projects."))
 
     project = get_object_or_404(
         Project.objects.select_related("client"),
@@ -172,16 +173,16 @@ def project_complete_view(request, pk):
     if hasattr(project, "contract"):
         messages.error(
             request,
-            "This project already has a contract. Finish it through the contract page."
+            _("This project already has a contract. Finish it through the contract page.")
         )
         return redirect("projects:project-detail", pk=project.pk)
 
     if project.status == ProjectStatus.COMPLETED:
-        messages.info(request, "Project is already completed.")
+        messages.info(request, _("Project is already completed."))
         return redirect("projects:project-detail", pk=project.pk)
 
     if project.status == ProjectStatus.CANCELLED:
-        messages.error(request, "Cancelled project cannot be completed.")
+        messages.error(request, _("Cancelled project cannot be completed."))
         return redirect("projects:project-detail", pk=project.pk)
 
     if request.method == "POST":
@@ -189,7 +190,7 @@ def project_complete_view(request, pk):
         project.is_active = False
         project.save(update_fields=["status", "is_active", "updated_at"])
 
-        messages.success(request, "Project marked as completed.")
+        messages.success(request, _("Project marked as completed."))
         return redirect("projects:project-detail", pk=project.pk)
 
     return render(

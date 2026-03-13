@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 from .models import Review
 
@@ -19,10 +20,10 @@ class ReviewCreateForm(forms.ModelForm):
         rating = self.cleaned_data["rating"]
 
         if rating is None:
-            raise ValidationError("Rating is required.")
+            raise ValidationError(_("Rating is required."))
 
         if rating < 1 or rating > 5:
-            raise ValidationError("Rating must be between 1 and 5.")
+            raise ValidationError(_("Rating must be between 1 and 5."))
 
         return rating
 
@@ -30,10 +31,10 @@ class ReviewCreateForm(forms.ModelForm):
         comment = self.cleaned_data["comment"].strip()
 
         if not comment:
-            raise ValidationError("Comment cannot be empty.")
+            raise ValidationError(_("Comment cannot be empty."))
 
         if len(comment) < 10:
-            raise ValidationError("Comment must contain at least 10 characters.")
+            raise ValidationError(_("Comment must contain at least 10 characters."))
 
         return comment
 
@@ -62,10 +63,10 @@ class ReviewUpdateForm(forms.ModelForm):
         rating = self.cleaned_data["rating"]
 
         if rating is None:
-            raise ValidationError("Rating is required.")
+            raise ValidationError(_("Rating is required."))
 
         if rating < 1 or rating > 5:
-            raise ValidationError("Rating must be between 1 and 5.")
+            raise ValidationError(_("Rating must be between 1 and 5."))
 
         return rating
 
@@ -73,10 +74,10 @@ class ReviewUpdateForm(forms.ModelForm):
         comment = self.cleaned_data["comment"].strip()
 
         if not comment:
-            raise ValidationError("Comment cannot be empty.")
+            raise ValidationError(_("Comment cannot be empty."))
 
         if len(comment) < 10:
-            raise ValidationError("Comment must contain at least 10 characters.")
+            raise ValidationError(_("Comment must contain at least 10 characters."))
 
         return comment
 

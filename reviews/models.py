@@ -1,15 +1,16 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from contracts.models import Contract, ContractStatus
 from projects.models import Project
 
 
 class ReviewSentiment(models.TextChoices):
-    POSITIVE = "positive", "Positive"
-    NEUTRAL = "neutral", "Neutral"
-    NEGATIVE = "negative", "Negative"
+    POSITIVE = "positive", _("Positive")
+    NEUTRAL = "neutral", _("Neutral")
+    NEGATIVE = "negative", _("Negative")
 
 
 class Review(models.Model):

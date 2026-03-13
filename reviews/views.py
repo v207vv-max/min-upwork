@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.translation import gettext_lazy as _
 
 from contracts.models import Contract, ContractStatus
 
@@ -13,7 +14,7 @@ from .services import create_review, update_review
 @login_required
 def review_create_view(request, contract_id):
     if not request.user.is_client:
-        raise PermissionDenied("Only clients can create reviews.")
+        raise PermissionDenied(_("Only clients can create reviews."))
 
     contract = get_object_or_404(
         Contract.objects.select_related(
@@ -26,11 +27,11 @@ def review_create_view(request, contract_id):
     )
 
     if contract.status != ContractStatus.FINISHED:
-        messages.error(request, "You can leave a review only for a finished contract.")
+        messages.error(request, _("You can leave a review only for a finished contract."))
         return redirect("contracts:contract-detail", pk=contract.pk)
 
     if hasattr(contract, "review"):
-        messages.error(request, "Review for this contract already exists.")
+        messages.error(request, _("Review for this contract already exists."))
         return redirect("reviews:review-detail", pk=contract.review.pk)
 
     form = ReviewCreateForm(request.POST or None)
@@ -43,7 +44,7 @@ def review_create_view(request, contract_id):
                 rating=form.cleaned_data["rating"],
                 comment=form.cleaned_data["comment"],
             )
-            messages.success(request, "Review created successfully.")
+            messages.success(request, _("Review created successfully."))
             return redirect("reviews:review-detail", pk=review.pk)
 
         except ValidationError as e:
@@ -62,7 +63,7 @@ def review_create_view(request, contract_id):
 @login_required
 def review_update_view(request, pk):
     if not request.user.is_client:
-        raise PermissionDenied("Only clients can update reviews.")
+        raise PermissionDenied(_("Only clients can update reviews."))
 
     review = get_object_or_404(
         Review.objects.select_related(
@@ -85,7 +86,7 @@ def review_update_view(request, pk):
                 rating=form.cleaned_data["rating"],
                 comment=form.cleaned_data["comment"],
             )
-            messages.success(request, "Review updated successfully.")
+            messages.success(request, _("Review updated successfully."))
             return redirect("reviews:review-detail", pk=review.pk)
 
         except ValidationError as e:
@@ -117,7 +118,7 @@ def review_detail_view(request, pk):
     is_freelancer_owner = review.freelancer == request.user
 
     if not (is_client_owner or is_freelancer_owner):
-        raise PermissionDenied("You do not have permission to view this review.")
+        raise PermissionDenied(_("You do not have permission to view this review."))
 
     return render(
         request,
@@ -129,7 +130,7 @@ def review_detail_view(request, pk):
 @login_required
 def written_reviews_view(request):
     if not request.user.is_client:
-        raise PermissionDenied("Only clients can view written reviews.")
+        raise PermissionDenied(_("Only clients can view written reviews."))
 
     reviews = Review.objects.select_related(
         "contract",
@@ -148,7 +149,7 @@ def written_reviews_view(request):
 @login_required
 def received_reviews_view(request):
     if not request.user.is_freelancer:
-        raise PermissionDenied("Only freelancers can view received reviews.")
+        raise PermissionDenied(_("Only freelancers can view received reviews."))
 
     reviews = Review.objects.select_related(
         "contract",

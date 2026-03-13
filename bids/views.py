@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.translation import gettext_lazy as _
 
 from projects.models import Project, ProjectStatus
 
@@ -15,7 +16,7 @@ from .services import accept_bid, create_bid, reject_bid, update_bid, withdraw_b
 @login_required
 def bid_create_view(request, project_id):
     if not request.user.is_freelancer:
-        raise PermissionDenied("Only freelancers can create bids.")
+        raise PermissionDenied(_("Only freelancers can create bids."))
 
     project = get_object_or_404(
         Project.objects.select_related("client"),
@@ -33,7 +34,7 @@ def bid_create_view(request, project_id):
                 price=form.cleaned_data["price"],
                 delivery_time_days=form.cleaned_data["delivery_time_days"],
             )
-            messages.success(request, "Bid submitted successfully.")
+            messages.success(request, _("Bid submitted successfully."))
             return redirect("bids:my-bids")
 
         except ValidationError as e:
@@ -52,7 +53,7 @@ def bid_create_view(request, project_id):
 @login_required
 def my_bids_view(request):
     if not request.user.is_freelancer:
-        raise PermissionDenied("Only freelancers can view their bids.")
+        raise PermissionDenied(_("Only freelancers can view their bids."))
 
     bids = Bid.objects.select_related("project", "project__client").filter(
         freelancer=request.user,
@@ -106,7 +107,7 @@ def my_bids_view(request):
 @login_required
 def bid_update_view(request, pk):
     if not request.user.is_freelancer:
-        raise PermissionDenied("Only freelancers can update bids.")
+        raise PermissionDenied(_("Only freelancers can update bids."))
 
     bid = get_object_or_404(
         Bid.objects.select_related("project", "project__client", "freelancer"),
@@ -115,7 +116,7 @@ def bid_update_view(request, pk):
     )
 
     if not bid.is_editable:
-        messages.error(request, "Only pending bids can be updated.")
+        messages.error(request, _("Only pending bids can be updated."))
         return redirect("bids:my-bids")
 
     form = BidUpdateForm(request.POST or None, instance=bid)
@@ -129,7 +130,7 @@ def bid_update_view(request, pk):
                 price=form.cleaned_data["price"],
                 delivery_time_days=form.cleaned_data["delivery_time_days"],
             )
-            messages.success(request, "Bid updated successfully.")
+            messages.success(request, _("Bid updated successfully."))
             return redirect("bids:my-bids")
 
         except ValidationError as e:
@@ -148,7 +149,7 @@ def bid_update_view(request, pk):
 @login_required
 def bid_withdraw_view(request, pk):
     if not request.user.is_freelancer:
-        raise PermissionDenied("Only freelancers can withdraw bids.")
+        raise PermissionDenied(_("Only freelancers can withdraw bids."))
 
     bid = get_object_or_404(
         Bid.objects.select_related("project", "project__client", "freelancer"),
@@ -157,7 +158,7 @@ def bid_withdraw_view(request, pk):
     )
 
     if not bid.can_be_withdrawn:
-        messages.error(request, "Only pending bids can be withdrawn.")
+        messages.error(request, _("Only pending bids can be withdrawn."))
         return redirect("bids:my-bids")
 
     if request.method == "POST":
@@ -166,7 +167,7 @@ def bid_withdraw_view(request, pk):
                 bid=bid,
                 freelancer=request.user,
             )
-            messages.success(request, "Bid withdrawn successfully.")
+            messages.success(request, _("Bid withdrawn successfully."))
             return redirect("bids:my-bids")
 
         except ValidationError as e:
@@ -183,7 +184,7 @@ def bid_withdraw_view(request, pk):
 @login_required
 def project_bids_view(request, project_id):
     if not request.user.is_client:
-        raise PermissionDenied("Only clients can view project bids.")
+        raise PermissionDenied(_("Only clients can view project bids."))
 
     project = get_object_or_404(
         Project.objects.select_related("client"),
@@ -214,7 +215,7 @@ def bid_detail_view(request, pk):
     is_project_client = request.user.is_authenticated and bid.project.client == request.user
 
     if not (is_freelancer_owner or is_project_client):
-        raise PermissionDenied("You do not have permission to view this bid.")
+        raise PermissionDenied(_("You do not have permission to view this bid."))
 
     return render(
         request,
@@ -226,7 +227,7 @@ def bid_detail_view(request, pk):
 @login_required
 def bid_accept_view(request, pk):
     if not request.user.is_client:
-        raise PermissionDenied("Only clients can accept bids.")
+        raise PermissionDenied(_("Only clients can accept bids."))
 
     bid = get_object_or_404(
         Bid.objects.select_related("project", "project__client", "freelancer"),
@@ -234,14 +235,14 @@ def bid_accept_view(request, pk):
     )
 
     if bid.project.client != request.user:
-        raise PermissionDenied("You can accept bids only for your own projects.")
+        raise PermissionDenied(_("You can accept bids only for your own projects."))
 
     if bid.project.status != ProjectStatus.OPEN:
-        messages.error(request, "Only bids for open projects can be accepted.")
+        messages.error(request, _("Only bids for open projects can be accepted."))
         return redirect("bids:project-bids", project_id=bid.project.pk)
 
     if bid.status != BidStatus.PENDING:
-        messages.error(request, "Only pending bids can be accepted.")
+        messages.error(request, _("Only pending bids can be accepted."))
         return redirect("bids:project-bids", project_id=bid.project.pk)
 
     if request.method == "POST":
@@ -250,7 +251,7 @@ def bid_accept_view(request, pk):
                 bid=bid,
                 client=request.user,
             )
-            messages.success(request, "Bid accepted successfully.")
+            messages.success(request, _("Bid accepted successfully."))
             return redirect("bids:project-bids", project_id=bid.project.pk)
 
         except ValidationError as e:
@@ -267,7 +268,7 @@ def bid_accept_view(request, pk):
 @login_required
 def bid_reject_view(request, pk):
     if not request.user.is_client:
-        raise PermissionDenied("Only clients can reject bids.")
+        raise PermissionDenied(_("Only clients can reject bids."))
 
     bid = get_object_or_404(
         Bid.objects.select_related("project", "project__client", "freelancer"),
@@ -275,10 +276,10 @@ def bid_reject_view(request, pk):
     )
 
     if bid.project.client != request.user:
-        raise PermissionDenied("You can reject bids only for your own projects.")
+        raise PermissionDenied(_("You can reject bids only for your own projects."))
 
     if bid.status != BidStatus.PENDING:
-        messages.error(request, "Only pending bids can be rejected.")
+        messages.error(request, _("Only pending bids can be rejected."))
         return redirect("bids:project-bids", project_id=bid.project.pk)
 
     if request.method == "POST":
@@ -287,7 +288,7 @@ def bid_reject_view(request, pk):
                 bid=bid,
                 client=request.user,
             )
-            messages.success(request, "Bid rejected successfully.")
+            messages.success(request, _("Bid rejected successfully."))
             return redirect("bids:project-bids", project_id=bid.project.pk)
 
         except ValidationError as e:

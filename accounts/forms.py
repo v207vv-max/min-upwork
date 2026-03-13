@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 from .models import User, UserRole, VerificationChannel
 
@@ -18,7 +19,7 @@ class SignUpForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["preferred_contact_method"].choices = [("", "---------"), *VerificationChannel.choices]
+        self.fields["preferred_contact_method"].choices = [("", _("---------")), *VerificationChannel.choices]
         self.fields["email"].required = False
         self.fields["phone_number"].required = False
         self.fields["preferred_contact_method"].required = False
@@ -29,7 +30,7 @@ class SignUpForm(forms.Form):
     def clean_username(self):
         username = self.cleaned_data["username"].strip()
         if User.objects.filter(username=username).exists():
-            raise ValidationError("Username already exists.")
+            raise ValidationError(_("Username already exists."))
         return username
 
     def clean_email(self):
@@ -37,7 +38,7 @@ class SignUpForm(forms.Form):
         if email:
             email = email.strip().lower()
             if User.objects.filter(email=email).exists():
-                raise ValidationError("Email already exists.")
+                raise ValidationError(_("Email already exists."))
         return email
 
     def clean_phone_number(self):
@@ -45,7 +46,7 @@ class SignUpForm(forms.Form):
         if phone_number:
             phone_number = "".join(phone_number.strip().split())
             if User.objects.filter(phone_number=phone_number).exists():
-                raise ValidationError("Phone number already exists.")
+                raise ValidationError(_("Phone number already exists."))
         return phone_number
 
     def clean(self):
@@ -57,16 +58,16 @@ class SignUpForm(forms.Form):
         confirm_password = cleaned_data.get("confirm_password")
 
         if not email and not phone_number:
-            raise ValidationError("You must provide either email or phone number.")
+            raise ValidationError(_("You must provide either email or phone number."))
 
         if password and confirm_password and password != confirm_password:
-            raise ValidationError("Passwords do not match.")
+            raise ValidationError(_("Passwords do not match."))
 
         if preferred_contact_method == VerificationChannel.EMAIL and not email:
-            raise ValidationError("Preferred contact method is email, but email is empty.")
+            raise ValidationError(_("Preferred contact method is email, but email is empty."))
 
         if preferred_contact_method == VerificationChannel.PHONE and not phone_number:
-            raise ValidationError("Preferred contact method is phone, but phone number is empty.")
+            raise ValidationError(_("Preferred contact method is phone, but phone number is empty."))
 
         return cleaned_data
 
@@ -77,14 +78,14 @@ class VerifyCodeForm(forms.Form):
     def clean_code(self):
         code = self.cleaned_data["code"].strip()
         if not code:
-            raise ValidationError("Code is required.")
+            raise ValidationError(_("Code is required."))
         return code
 
 
 class LoginForm(forms.Form):
     identifier = forms.CharField(
         max_length=255,
-        help_text="Username, email or phone number",
+        help_text=_("Username, email or phone number"),
     )
     password = forms.CharField(widget=forms.PasswordInput)
 
@@ -95,13 +96,13 @@ class LoginForm(forms.Form):
 class ForgotPasswordForm(forms.Form):
     identifier = forms.CharField(
         max_length=255,
-        help_text="Username, email or phone number",
+        help_text=_("Username, email or phone number"),
     )
 
     def clean_identifier(self):
         identifier = self.cleaned_data["identifier"].strip()
         if not identifier:
-            raise ValidationError("Identifier is required.")
+            raise ValidationError(_("Identifier is required."))
         return identifier
 
 
@@ -113,7 +114,7 @@ class ResetPasswordForm(forms.Form):
     def clean_code(self):
         code = self.cleaned_data["code"].strip()
         if not code:
-            raise ValidationError("Code is required.")
+            raise ValidationError(_("Code is required."))
         return code
 
     def clean(self):
@@ -122,7 +123,7 @@ class ResetPasswordForm(forms.Form):
         confirm_password = cleaned_data.get("confirm_password")
 
         if new_password and confirm_password and new_password != confirm_password:
-            raise ValidationError("Passwords do not match.")
+            raise ValidationError(_("Passwords do not match."))
 
         return cleaned_data
 
@@ -138,7 +139,7 @@ class ChangePasswordForm(forms.Form):
         confirm_password = cleaned_data.get("confirm_password")
 
         if new_password and confirm_password and new_password != confirm_password:
-            raise ValidationError("Passwords do not match.")
+            raise ValidationError(_("Passwords do not match."))
 
         return cleaned_data
 
@@ -163,7 +164,7 @@ class ProfileUpdateForm(forms.ModelForm):
             qs = qs.exclude(pk=self.instance.pk)
 
         if qs.exists():
-            raise ValidationError("Username already exists.")
+            raise ValidationError(_("Username already exists."))
 
         return username
 
@@ -177,7 +178,7 @@ class ProfileUpdateForm(forms.ModelForm):
                 qs = qs.exclude(pk=self.instance.pk)
 
             if qs.exists():
-                raise ValidationError("Email already exists.")
+                raise ValidationError(_("Email already exists."))
         return email
 
     def clean_phone_number(self):
@@ -190,7 +191,7 @@ class ProfileUpdateForm(forms.ModelForm):
                 qs = qs.exclude(pk=self.instance.pk)
 
             if qs.exists():
-                raise ValidationError("Phone number already exists.")
+                raise ValidationError(_("Phone number already exists."))
         return phone_number
 
     def clean(self):
@@ -200,12 +201,12 @@ class ProfileUpdateForm(forms.ModelForm):
         preferred_contact_method = cleaned_data.get("preferred_contact_method")
 
         if not email and not phone_number:
-            raise ValidationError("You must provide either email or phone number.")
+            raise ValidationError(_("You must provide either email or phone number."))
 
         if preferred_contact_method == VerificationChannel.EMAIL and not email:
-            raise ValidationError("Preferred contact method is email, but email is empty.")
+            raise ValidationError(_("Preferred contact method is email, but email is empty."))
 
         if preferred_contact_method == VerificationChannel.PHONE and not phone_number:
-            raise ValidationError("Preferred contact method is phone, but phone number is empty.")
+            raise ValidationError(_("Preferred contact method is phone, but phone number is empty."))
 
         return cleaned_data

@@ -1,50 +1,240 @@
 {% extends "base.html" %}
 {% load i18n %}
+
 {% block title %}{% trans "Projects" %}{% endblock %}
+
 {% block content %}
 <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
     <div>
-        <h1 class="h2 mb-1">{% trans "Projects" %}</h1>
+        <h1 class="h2 fw-bold mb-1">{% trans "Projects" %}</h1>
         <p class="text-muted mb-0">{% trans "Browse available freelance projects." %}</p>
     </div>
+
     {% if request.user.is_authenticated and request.user.is_client %}
-        <a href="{% url 'projects:project-create' %}" class="btn btn-primary">{% trans "Create project" %}</a>
+        <a href="{% url 'projects:project-create' %}" class="btn btn-primary px-4">
+            {% trans "Create project" %}
+        </a>
     {% endif %}
 </div>
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-4"><input type="text" name="q" value="{{ filters.q }}" class="form-control" placeholder="{% trans 'Search projects' %}"></div>
-            <div class="col-md-2"><select name="status" class="form-select"><option value="">{% trans "Any status" %}</option>{% for value, label in project_statuses %}<option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-            <div class="col-md-2"><input type="number" step="0.01" name="min_budget" value="{{ filters.min_budget }}" class="form-control" placeholder="{% trans 'Min budget' %}"></div>
-            <div class="col-md-2"><input type="number" step="0.01" name="max_budget" value="{{ filters.max_budget }}" class="form-control" placeholder="{% trans 'Max budget' %}"></div>
-            <div class="col-md-2"><select name="ordering" class="form-select"><option value="newest">{% trans "Newest" %}</option><option value="oldest" {% if filters.ordering == 'oldest' %}selected{% endif %}>{% trans "Oldest" %}</option><option value="budget_asc" {% if filters.ordering == 'budget_asc' %}selected{% endif %}>{% trans "Budget ascending" %}</option><option value="budget_desc" {% if filters.ordering == 'budget_desc' %}selected{% endif %}>{% trans "Budget descending" %}</option></select></div>
-            <div class="col-md-3"><input type="date" name="deadline_from" value="{{ filters.deadline_from }}" class="form-control"></div>
-            <div class="col-md-3"><input type="date" name="deadline_to" value="{{ filters.deadline_to }}" class="form-control"></div>
-            <div class="col-md-3"><select name="is_active" class="form-select"><option value="">{% trans "Any activity" %}</option><option value="true" {% if filters.is_active == 'true' %}selected{% endif %}>{% trans "Active only" %}</option><option value="false" {% if filters.is_active == 'false' %}selected{% endif %}>{% trans "Inactive only" %}</option></select></div>
-            <div class="col-md-3 d-flex gap-2"><button type="submit" class="btn btn-primary w-100">{% trans "Apply filters" %}</button><a href="{% url 'projects:project-list' %}" class="btn btn-outline-secondary w-100">{% trans "Reset" %}</a></div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-lg-4 col-md-6">
+                <label for="id_q" class="form-label small text-muted mb-1">
+                    {% trans "Search" %}
+                </label>
+                <input
+                    id="id_q"
+                    type="text"
+                    name="q"
+                    value="{{ filters.q }}"
+                    class="form-control"
+                    placeholder="{% trans 'Search projects' %}"
+                >
+            </div>
+
+            <div class="col-lg-2 col-md-3">
+                <label for="id_min_budget" class="form-label small text-muted mb-1">
+                    {% trans "Min budget" %}
+                </label>
+                <input
+                    id="id_min_budget"
+                    type="number"
+                    step="0.01"
+                    name="min_budget"
+                    value="{{ filters.min_budget }}"
+                    class="form-control"
+                    placeholder="0"
+                >
+            </div>
+
+            <div class="col-lg-2 col-md-3">
+                <label for="id_max_budget" class="form-label small text-muted mb-1">
+                    {% trans "Max budget" %}
+                </label>
+                <input
+                    id="id_max_budget"
+                    type="number"
+                    step="0.01"
+                    name="max_budget"
+                    value="{{ filters.max_budget }}"
+                    class="form-control"
+                    placeholder="1000"
+                >
+            </div>
+
+            <div class="col-lg-2 col-md-6">
+                <label for="id_ordering" class="form-label small text-muted mb-1">
+                    {% trans "Sort by" %}
+                </label>
+                <select id="id_ordering" name="ordering" class="form-select">
+                    <option value="newest" {% if filters.ordering == 'newest' or not filters.ordering %}selected{% endif %}>
+                        {% trans "Newest" %}
+                    </option>
+                    <option value="oldest" {% if filters.ordering == 'oldest' %}selected{% endif %}>
+                        {% trans "Oldest" %}
+                    </option>
+                    <option value="budget_asc" {% if filters.ordering == 'budget_asc' %}selected{% endif %}>
+                        {% trans "Budget ascending" %}
+                    </option>
+                    <option value="budget_desc" {% if filters.ordering == 'budget_desc' %}selected{% endif %}>
+                        {% trans "Budget descending" %}
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-lg-2 col-md-3">
+                <label for="id_deadline_from" class="form-label small text-muted mb-1">
+                    {% trans "Deadline from" %}
+                </label>
+                <input
+                    id="id_deadline_from"
+                    type="date"
+                    name="deadline_from"
+                    value="{{ filters.deadline_from }}"
+                    class="form-control"
+                >
+            </div>
+
+            <div class="col-lg-2 col-md-3">
+                <label for="id_deadline_to" class="form-label small text-muted mb-1">
+                    {% trans "Deadline to" %}
+                </label>
+                <input
+                    id="id_deadline_to"
+                    type="date"
+                    name="deadline_to"
+                    value="{{ filters.deadline_to }}"
+                    class="form-control"
+                >
+            </div>
+
+            <div class="col-lg-4 col-md-6 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    {% trans "Apply filters" %}
+                </button>
+                <a href="{% url 'projects:project-list' %}" class="btn btn-outline-secondary w-100">
+                    {% trans "Reset" %}
+                </a>
+            </div>
         </form>
     </div>
 </div>
+
 <div class="row g-4">
     {% for project in projects %}
-        {% if project.is_active %}
-        <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-body">
+        <div class="col-xl-6">
+            <div class="card h-100 border-0 shadow-sm project-card">
+                <div class="card-body p-4 d-flex flex-column">
                     <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                        <div><h2 class="h5 mb-1"><a class="text-decoration-none" href="{% url 'projects:project-detail' project.pk %}">{{ project.title }}</a></h2><div class="text-muted small">{{ project.client.username }}</div></div>
-                        <span class="badge text-uppercase status-{{ project.status }}">{{ project.get_status_display }}</span>
+                        <div class="flex-grow-1">
+                            <h2 class="h5 fw-semibold mb-1">
+                                <a class="text-decoration-none project-title" href="{% url 'projects:project-detail' project.pk %}">
+                                    {{ project.title }}
+                                </a>
+                            </h2>
+                            <div class="text-muted small">
+                                {{ project.client.username }}
+                            </div>
+                        </div>
+
+                        <span class="badge rounded-pill px-3 py-2 project-status status-{{ project.status }}">
+                            {{ project.get_status_display }}
+                        </span>
                     </div>
-                    <p class="text-muted">{{ project.description|truncatechars:170 }}</p>
-                    <div class="d-flex flex-wrap gap-2 small text-muted mb-3"><span>{% trans "Budget" %}: {{ project.budget }}</span><span>{% trans "Deadline" %}: {{ project.deadline }}</span><span>{% trans "Skills" %}: {{ project.skills_required|default:"-" }}</span></div>
-                    <a href="{% url 'projects:project-detail' project.pk %}" class="btn btn-outline-primary">{% trans "View details" %}</a>
+
+                    <p class="text-muted mb-4">
+                        {{ project.description|truncatechars:170 }}
+                    </p>
+
+                    <div class="row g-3 small text-muted mb-4">
+                        <div class="col-sm-4">
+                            <div class="border rounded-3 p-3 h-100 bg-light-subtle">
+                                <div class="fw-semibold text-dark mb-1">{% trans "Budget" %}</div>
+                                <div>{{ project.budget }}</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="border rounded-3 p-3 h-100 bg-light-subtle">
+                                <div class="fw-semibold text-dark mb-1">{% trans "Deadline" %}</div>
+                                <div>{{ project.deadline }}</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="border rounded-3 p-3 h-100 bg-light-subtle">
+                                <div class="fw-semibold text-dark mb-1">{% trans "Skills" %}</div>
+                                <div>{{ project.skills_required|default:"-" }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">
+                            {% trans "Project details and bidding information" %}
+                        </span>
+                        <a href="{% url 'projects:project-detail' project.pk %}" class="btn btn-outline-primary">
+                            {% trans "View details" %}
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
-        {% endif %}
     {% empty %}
-        <div class="col-12"><div class="card"><div class="card-body text-center py-5"><h2 class="h4">{% trans "No projects found" %}</h2><p class="text-muted mb-0">{% trans "Try changing filters or create a new project." %}</p></div></div></div>
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <h2 class="h4 fw-semibold mb-2">{% trans "No projects found" %}</h2>
+                    <p class="text-muted mb-0">{% trans "Try changing filters or create a new project." %}</p>
+                </div>
+            </div>
+        </div>
     {% endfor %}
 </div>
+
+<style>
+    .project-card {
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+        border-radius: 1rem;
+    }
+
+    .project-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .project-title {
+        color: inherit;
+    }
+
+    .project-title:hover {
+        color: var(--bs-primary);
+    }
+
+    .project-status {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+    }
+
+    .status-open {
+        background-color: rgba(25, 135, 84, 0.12);
+        color: #198754;
+    }
+
+    .status-in_progress {
+        background-color: rgba(13, 110, 253, 0.12);
+        color: #0d6efd;
+    }
+
+    .status-completed {
+        background-color: rgba(108, 117, 125, 0.15);
+        color: #495057;
+    }
+
+    .status-cancelled {
+        background-color: rgba(220, 53, 69, 0.12);
+        color: #dc3545;
+    }
+</style>
 {% endblock %}
