@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{{ project.title }}{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card"><div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                <div><h1 class="h2 mb-1">{{ project.title }}</h1><div class="text-muted">{% trans "Client" %}: {{ project.client.username }}</div></div>
+                <span class="badge fs-6 text-uppercase status-{{ project.status }}">{{ project.get_status_display }}</span>
+            </div>
+            <p class="mb-4">{{ project.description|linebreaksbr }}</p>
+            <div class="row g-3">
+                <div class="col-md-4"><strong>{% trans "Budget" %}</strong><div class="text-muted">{{ project.budget }}</div></div>
+                <div class="col-md-4"><strong>{% trans "Deadline" %}</strong><div class="text-muted">{{ project.deadline }}</div></div>
+                <div class="col-md-4"><strong>{% trans "Active" %}</strong><div class="text-muted">{% if project.is_active %}{% trans "Yes" %}{% else %}{% trans "No" %}{% endif %}</div></div>
+                <div class="col-12"><strong>{% trans "Required skills" %}</strong><div class="text-muted">{{ project.skills_required|default:"-" }}</div></div>
+            </div>
+        </div></div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card"><div class="card-body p-4">
+            <h2 class="h5 mb-3">{% trans "Actions" %}</h2>
+            <div class="d-grid gap-2">
+                {% if request.user.is_authenticated and request.user.is_freelancer and project.status == 'open' and project.is_active %}<a href="{% url 'bids:bid-create' project.pk %}" class="btn btn-primary">{% trans "Submit bid" %}</a>{% endif %}
+                {% if request.user == project.client %}
+                    <a href="{% url 'projects:project-update' project.pk %}" class="btn btn-outline-primary">{% trans "Edit project" %}</a>
+                    <a href="{% url 'bids:project-bids' project.pk %}" class="btn btn-outline-secondary">{% trans "View bids" %}</a>
+                    <a href="{% url 'projects:project-complete' project.pk %}" class="btn btn-outline-success">{% trans "Complete project" %}</a>
+                    <a href="{% url 'projects:project-cancel' project.pk %}" class="btn btn-outline-danger">{% trans "Cancel project" %}</a>
+                {% endif %}
+                <a href="{% url 'projects:project-list' %}" class="btn btn-light border">{% trans "Back to projects" %}</a>
+            </div>
+        </div></div>
+    </div>
+</div>
+{% endblock %}

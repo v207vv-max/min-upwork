@@ -128,6 +128,13 @@ def project_cancel_view(request, pk):
         client=request.user,
     )
 
+    if hasattr(project, "contract"):
+        messages.error(
+            request,
+            "This project already has a contract. Cancel it through the contract page."
+        )
+        return redirect("projects:project-detail", pk=project.pk)
+
     if project.status == ProjectStatus.CANCELLED:
         messages.info(request, "Project is already cancelled.")
         return redirect("projects:project-detail", pk=project.pk)
@@ -161,6 +168,13 @@ def project_complete_view(request, pk):
         pk=pk,
         client=request.user,
     )
+
+    if hasattr(project, "contract"):
+        messages.error(
+            request,
+            "This project already has a contract. Finish it through the contract page."
+        )
+        return redirect("projects:project-detail", pk=project.pk)
 
     if project.status == ProjectStatus.COMPLETED:
         messages.info(request, "Project is already completed.")

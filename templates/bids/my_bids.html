@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "My bids" %}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4"><div><h1 class="h2 mb-1">{% trans "My bids" %}</h1><p class="text-muted mb-0">{% trans "Track all bids submitted by you." %}</p></div></div>
+<div class="card mb-4"><div class="card-body">
+    <form method="get" class="row g-3">
+        <div class="col-md-3"><select name="status" class="form-select"><option value="">{% trans "Any status" %}</option>{% for value, label in bid_statuses %}<option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="col-md-2"><input type="number" step="0.01" name="min_price" value="{{ filters.min_price }}" class="form-control" placeholder="{% trans 'Min price' %}"></div>
+        <div class="col-md-2"><input type="number" step="0.01" name="max_price" value="{{ filters.max_price }}" class="form-control" placeholder="{% trans 'Max price' %}"></div>
+        <div class="col-md-3"><select name="ordering" class="form-select"><option value="newest">{% trans "Newest" %}</option><option value="oldest" {% if filters.ordering == 'oldest' %}selected{% endif %}>{% trans "Oldest" %}</option><option value="price_asc" {% if filters.ordering == 'price_asc' %}selected{% endif %}>{% trans "Price ascending" %}</option><option value="price_desc" {% if filters.ordering == 'price_desc' %}selected{% endif %}>{% trans "Price descending" %}</option></select></div>
+        <div class="col-md-2 d-grid"><button class="btn btn-primary" type="submit">{% trans "Apply" %}</button></div>
+    </form>
+</div></div>
+<div class="card"><div class="table-responsive"><table class="table align-middle mb-0">
+    <thead class="table-light"><tr><th>{% trans "Project" %}</th><th>{% trans "Price" %}</th><th>{% trans "Delivery" %}</th><th>{% trans "Status" %}</th><th>{% trans "Actions" %}</th></tr></thead>
+    <tbody>
+        {% for bid in bids %}
+            <tr>
+                <td><a class="text-decoration-none" href="{% url 'bids:bid-detail' bid.pk %}">{{ bid.project.title }}</a></td>
+                <td>{{ bid.price }}</td>
+                <td>{{ bid.delivery_time_days }} {% trans "days" %}</td>
+                <td><span class="badge status-{{ bid.status }}">{{ bid.get_status_display }}</span></td>
+                <td class="d-flex flex-wrap gap-2"><a href="{% url 'bids:bid-detail' bid.pk %}" class="btn btn-sm btn-outline-primary">{% trans "View" %}</a>{% if bid.is_editable %}<a href="{% url 'bids:bid-update' bid.pk %}" class="btn btn-sm btn-outline-secondary">{% trans "Edit" %}</a>{% endif %}{% if bid.can_be_withdrawn %}<a href="{% url 'bids:bid-withdraw' bid.pk %}" class="btn btn-sm btn-outline-danger">{% trans "Withdraw" %}</a>{% endif %}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5" class="text-center text-muted py-5">{% trans "No bids found." %}</td></tr>
+        {% endfor %}
+    </tbody>
+</table></div></div>
+{% endblock %}

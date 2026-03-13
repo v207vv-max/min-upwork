@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Chat" %}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4"><div><h1 class="h2 mb-1">{% trans "Conversations" %}</h1><p class="text-muted mb-0">{% trans "All chats related to your contracts." %}</p></div></div>
+<div class="row g-4">
+    {% for conversation in conversations %}
+        <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div><h2 class="h5 mb-1"><a class="text-decoration-none" href="{% url 'chat:conversation-detail' conversation.pk %}">{{ conversation.contract.project.title }}</a></h2><div class="text-muted small">{% if request.user == conversation.client %}{{ conversation.freelancer.username }}{% else %}{{ conversation.client.username }}{% endif %}</div></div>
+                <span class="badge status-{{ conversation.contract.status }}">{{ conversation.contract.get_status_display }}</span>
+            </div>
+            <div class="text-muted small mb-3">{% trans "Updated" %}: {{ conversation.updated_at }}</div>
+            <a class="btn btn-outline-primary" href="{% url 'chat:conversation-detail' conversation.pk %}">{% trans "Open chat" %}</a>
+        </div></div></div>
+    {% empty %}
+        <div class="col-12"><div class="card"><div class="card-body text-center py-5 text-muted">{% trans "No conversations yet." %}</div></div></div>
+    {% endfor %}
+</div>
+{% endblock %}

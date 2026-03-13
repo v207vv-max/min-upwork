@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Bid detail" %}{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-8"><div class="card"><div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+            <div><h1 class="h3 mb-1">{{ bid.project.title }}</h1><div class="text-muted">{{ bid.freelancer.username }}</div></div>
+            <span class="badge fs-6 status-{{ bid.status }}">{{ bid.get_status_display }}</span>
+        </div>
+        <div class="row g-3 mb-4"><div class="col-md-6"><strong>{% trans "Price" %}</strong><div class="text-muted">{{ bid.price }}</div></div><div class="col-md-6"><strong>{% trans "Delivery time" %}</strong><div class="text-muted">{{ bid.delivery_time_days }} {% trans "days" %}</div></div></div>
+        <h2 class="h5">{% trans "Proposal" %}</h2>
+        <p class="mb-0">{{ bid.proposal|linebreaksbr }}</p>
+    </div></div></div>
+    <div class="col-lg-4"><div class="card"><div class="card-body p-4">
+        <h2 class="h5 mb-3">{% trans "Actions" %}</h2>
+        <div class="d-grid gap-2">
+            {% if request.user == bid.freelancer and bid.is_editable %}<a href="{% url 'bids:bid-update' bid.pk %}" class="btn btn-outline-primary">{% trans "Edit bid" %}</a><a href="{% url 'bids:bid-withdraw' bid.pk %}" class="btn btn-outline-danger">{% trans "Withdraw bid" %}</a>{% endif %}
+            {% if request.user == bid.project.client and bid.status == 'pending' %}<a href="{% url 'bids:bid-accept' bid.pk %}" class="btn btn-success">{% trans "Accept bid" %}</a><a href="{% url 'bids:bid-reject' bid.pk %}" class="btn btn-outline-danger">{% trans "Reject bid" %}</a>{% endif %}
+        </div>
+    </div></div></div>
+</div>
+{% endblock %}

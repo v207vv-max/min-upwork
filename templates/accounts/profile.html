@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Profile" %}{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body text-center p-4">
+                {% if user_obj.image %}<img src="{{ user_obj.image.url }}" alt="{{ user_obj.username }}" class="rounded-circle img-fluid mb-3" style="width: 140px; height: 140px; object-fit: cover;">{% endif %}
+                <h1 class="h4 mb-1">{{ user_obj.username }}</h1>
+                <p class="text-muted mb-3">{{ user_obj.get_role_display }}</p>
+                <a href="{% url 'accounts:profile-update' %}" class="btn btn-primary w-100 mb-2">{% trans "Edit profile" %}</a>
+                <a href="{% url 'accounts:change-password' %}" class="btn btn-outline-secondary w-100">{% trans "Change password" %}</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <h2 class="h5 mb-3">{% trans "Profile information" %}</h2>
+                <div class="row g-3">
+                    <div class="col-md-6"><strong>{% trans "Username" %}</strong><div class="text-muted">{{ user_obj.username }}</div></div>
+                    <div class="col-md-6"><strong>{% trans "Role" %}</strong><div class="text-muted">{{ user_obj.get_role_display }}</div></div>
+                    <div class="col-md-6"><strong>{% trans "Email" %}</strong><div class="text-muted">{{ user_obj.email|default:"-" }}</div></div>
+                    <div class="col-md-6"><strong>{% trans "Phone" %}</strong><div class="text-muted">{{ user_obj.phone_number|default:"-" }}</div></div>
+                    <div class="col-12"><strong>{% trans "Bio" %}</strong><div class="text-muted">{{ user_obj.bio|default:"-"|linebreaksbr }}</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

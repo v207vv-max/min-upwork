@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Written reviews" %}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4"><div><h1 class="h2 mb-1">{% trans "Written reviews" %}</h1><p class="text-muted mb-0">{% trans "Reviews written by you as a client." %}</p></div></div>
+<div class="row g-4">
+    {% for review in reviews %}
+        <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+            <div class="d-flex justify-content-between mb-3"><div><h2 class="h5 mb-1"><a class="text-decoration-none" href="{% url 'reviews:review-detail' review.pk %}">{{ review.freelancer.username }}</a></h2><div class="text-muted small">{{ review.project.title }}</div></div><span class="badge status-{{ review.sentiment }}">{{ review.rating }}/5</span></div>
+            <p class="text-muted">{{ review.comment|truncatechars:150 }}</p>
+        </div></div></div>
+    {% empty %}
+        <div class="col-12"><div class="card"><div class="card-body text-center py-5 text-muted">{% trans "No written reviews yet." %}</div></div></div>
+    {% endfor %}
+</div>
+{% endblock %}

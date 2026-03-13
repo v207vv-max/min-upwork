@@ -1,20 +1,26 @@
 import random
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib.auth import authenticate
-from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.utils import timezone
+from django.core.mail import send_mail
 
-from .models import User, VerificationCode, VerificationChannel, VerificationPurpose, VerificationStatus
-
-
+from .models import (
+    User,
+    VerificationCode,
+    VerificationChannel,
+    VerificationPurpose,
+    VerificationStatus,
+)
 def generate_code():
     """Generate 6 digit verification code."""
     return str(random.randint(100000, 999999))
 
 
 def create_verification_code(*, user, channel, purpose, target):
-    """Create verification code object."""
+    """Create verification code object and deliver it."""
     code = generate_code()
 
     verification = VerificationCode.objects.create(
@@ -26,8 +32,16 @@ def create_verification_code(*, user, channel, purpose, target):
         expires_at=timezone.now() + timedelta(minutes=10),
     )
 
-    # здесь будет отправка email или sms
-    print(f"Verification code for {target}: {code}")
+    if channel == VerificationChannel.EMAIL:
+        send_verification_code_email(
+            to_email=target,
+            code=code,
+            purpose=purpose,
+        )
+    else:
+        # Phone delivery is intentionally not implemented for this project.
+        # We keep the field and channel for architecture completeness.
+        print(f"[PHONE DELIVERY NOT IMPLEMENTED] Verification code for {target}: {code}")
 
     return verification
 
@@ -36,7 +50,15 @@ def create_verification_code(*, user, channel, purpose, target):
 # SIGNUP
 # ===============================
 
-def register_user(*, username, password, role, email=None, phone_number=None):
+def register_user(
+    *,
+    username,
+    password,
+    role,
+    email=None,
+    phone_number=None,
+    preferred_contact_method=None,
+):
     """Register user and send verification code."""
 
     if not email and not phone_number:
@@ -48,14 +70,14 @@ def register_user(*, username, password, role, email=None, phone_number=None):
         role=role,
         email=email,
         phone_number=phone_number,
+        preferred_contact_method=preferred_contact_method,
     )
 
-    if email:
-        channel = VerificationChannel.EMAIL
-        target = email
-    else:
-        channel = VerificationChannel.PHONE
-        target = phone_number
+    channel, target = resolve_contact_channel_and_target(
+        email=user.email,
+        phone_number=user.phone_number,
+        preferred_contact_method=user.preferred_contact_method,
+    )
 
     create_verification_code(
         user=user,
@@ -150,12 +172,11 @@ def request_password_reset(identifier):
     if not user:
         raise ValidationError("User not found")
 
-    if user.email:
-        channel = VerificationChannel.EMAIL
-        target = user.email
-    else:
-        channel = VerificationChannel.PHONE
-        target = user.phone_number
+    channel, target = resolve_contact_channel_and_target(
+        email=user.email,
+        phone_number=user.phone_number,
+        preferred_contact_method=user.preferred_contact_method,
+    )
 
     create_verification_code(
         user=user,
@@ -210,3 +231,37 @@ def change_password(*, user, old_password, new_password):
     user.save(update_fields=["password"])
 
     return user
+
+def resolve_contact_channel_and_target(*, email=None, phone_number=None, preferred_contact_method=None):
+    """
+    For this project we use email as the real delivery channel.
+    If email exists, always send there.
+    Fallback to phone only as stored metadata if email does not exist.
+    """
+
+    if email:
+        return VerificationChannel.EMAIL, email
+
+    if phone_number:
+        return VerificationChannel.PHONE, phone_number
+
+    raise ValidationError("Email or phone number must be provided.")
+
+
+def send_verification_code_email(*, to_email, code, purpose):
+    """
+    Send verification code to email.
+    """
+    subject = "Your verification code"
+    message = (
+        f"Your verification code for {purpose} is: {code}\n\n"
+        f"This code will expire in 10 minutes."
+    )
+
+    send_mail(
+        subject=subject,
+        message=message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[to_email],
+        fail_silently=False,
+    )

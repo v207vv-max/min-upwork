@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Contracts" %}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4"><div><h1 class="h2 mb-1">{% trans "Contracts" %}</h1><p class="text-muted mb-0">{% trans "Review all your contracts." %}</p></div></div>
+<div class="card mb-4"><div class="card-body">
+    <form method="get" class="row g-3">
+        <div class="col-md-4"><select name="status" class="form-select"><option value="">{% trans "Any status" %}</option>{% for value, label in contract_statuses %}<option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="col-md-4"><select name="ordering" class="form-select"><option value="newest">{% trans "Newest" %}</option><option value="oldest" {% if filters.ordering == 'oldest' %}selected{% endif %}>{% trans "Oldest" %}</option><option value="started_asc" {% if filters.ordering == 'started_asc' %}selected{% endif %}>{% trans "Started ascending" %}</option><option value="started_desc" {% if filters.ordering == 'started_desc' %}selected{% endif %}>{% trans "Started descending" %}</option></select></div>
+        <div class="col-md-4 d-grid"><button class="btn btn-primary" type="submit">{% trans "Apply" %}</button></div>
+    </form>
+</div></div>
+<div class="row g-4">
+    {% for contract in contracts %}
+        <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-start gap-3 mb-3"><div><h2 class="h5 mb-1"><a class="text-decoration-none" href="{% url 'contracts:contract-detail' contract.pk %}">{{ contract.project.title }}</a></h2><div class="text-muted small">{{ contract.client.username }} • {{ contract.freelancer.username }}</div></div><span class="badge status-{{ contract.status }}">{{ contract.get_status_display }}</span></div>
+            <div class="small text-muted mb-3">{{ contract.agreed_price }} • {{ contract.started_at|default:"-" }}</div>
+            <a href="{% url 'contracts:contract-detail' contract.pk %}" class="btn btn-outline-primary">{% trans "View contract" %}</a>
+        </div></div></div>
+    {% empty %}
+        <div class="col-12"><div class="card"><div class="card-body text-center py-5 text-muted">{% trans "No contracts found." %}</div></div></div>
+    {% endfor %}
+</div>
+{% endblock %}

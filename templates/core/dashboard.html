@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Dashboard" %}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">{% trans "Dashboard" %}</h1>
+        <p class="text-muted mb-0">{% trans "Overview of your activity on the platform." %}</p>
+    </div>
+</div>
+{% if dashboard.role == "client" %}
+    <div class="row g-4 mb-4">
+        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h6 text-muted">{% trans "Total projects" %}</h2><div class="display-6">{{ dashboard.projects.total }}</div></div></div></div>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h6 text-muted">{% trans "Active contracts" %}</h2><div class="display-6">{{ dashboard.contracts.active }}</div></div></div></div>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h6 text-muted">{% trans "Written reviews" %}</h2><div class="display-6">{{ dashboard.reviews.written }}</div></div></div></div>
+    </div>
+{% elif dashboard.role == "freelancer" %}
+    <div class="row g-4 mb-4">
+        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h6 text-muted">{% trans "Total bids" %}</h2><div class="display-6">{{ dashboard.bids.total }}</div></div></div></div>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h6 text-muted">{% trans "Active contracts" %}</h2><div class="display-6">{{ dashboard.contracts.active }}</div></div></div></div>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h6 text-muted">{% trans "Average rating" %}</h2><div class="display-6">{{ dashboard.reviews.average_rating|default:"-" }}</div></div></div></div>
+    </div>
+{% endif %}
+<div class="card">
+    <div class="card-body p-4">
+        <h2 class="h5 mb-3">{% trans "Quick actions" %}</h2>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'projects:project-list' %}" class="btn btn-outline-primary">{% trans "Projects" %}</a>
+            <a href="{% url 'contracts:contract-list' %}" class="btn btn-outline-secondary">{% trans "Contracts" %}</a>
+            <a href="{% url 'chat:conversation-list' %}" class="btn btn-outline-dark">{% trans "Chat" %}</a>
+            <a href="{% url 'accounts:profile' %}" class="btn btn-outline-success">{% trans "Profile" %}</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

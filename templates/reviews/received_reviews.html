@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Received reviews" %}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4"><div><h1 class="h2 mb-1">{% trans "Received reviews" %}</h1><p class="text-muted mb-0">{% trans "Feedback received from clients." %}</p></div></div>
+<div class="card mb-4"><div class="card-body">
+    <form method="get" class="row g-3">
+        <div class="col-md-4"><input type="number" name="rating" min="1" max="5" value="{{ filters.rating }}" class="form-control" placeholder="{% trans 'Rating' %}"></div>
+        <div class="col-md-4"><select name="sentiment" class="form-select"><option value="">{% trans "Any sentiment" %}</option>{% for value, label in review_sentiments %}<option value="{{ value }}" {% if filters.sentiment == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="col-md-4"><select name="ordering" class="form-select"><option value="newest">{% trans "Newest" %}</option><option value="oldest" {% if filters.ordering == 'oldest' %}selected{% endif %}>{% trans "Oldest" %}</option><option value="rating_asc" {% if filters.ordering == 'rating_asc' %}selected{% endif %}>{% trans "Rating ascending" %}</option><option value="rating_desc" {% if filters.ordering == 'rating_desc' %}selected{% endif %}>{% trans "Rating descending" %}</option></select></div>
+        <div class="col-12 d-grid"><button type="submit" class="btn btn-primary">{% trans "Apply filters" %}</button></div>
+    </form>
+</div></div>
+<div class="row g-4">
+    {% for review in reviews %}
+        <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+            <div class="d-flex justify-content-between mb-3"><div><h2 class="h5 mb-1"><a class="text-decoration-none" href="{% url 'reviews:review-detail' review.pk %}">{{ review.client.username }}</a></h2><div class="text-muted small">{{ review.project.title }}</div></div><span class="badge status-{{ review.sentiment }}">{{ review.rating }}/5</span></div>
+            <p class="text-muted">{{ review.comment|truncatechars:150 }}</p>
+        </div></div></div>
+    {% empty %}
+        <div class="col-12"><div class="card"><div class="card-body text-center py-5 text-muted">{% trans "No reviews found." %}</div></div></div>
+    {% endfor %}
+</div>
+{% endblock %}

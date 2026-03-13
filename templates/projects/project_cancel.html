@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Cancel project" %}{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-md-7"><div class="card border-danger"><div class="card-body p-4">
+    <h1 class="h3 text-danger mb-3">{% trans "Cancel project" %}</h1>
+    <p>{% trans "Are you sure you want to cancel this project?" %}</p>
+    <div class="alert alert-light border"><strong>{{ project.title }}</strong><br><span class="text-muted">{{ project.description|truncatechars:180 }}</span></div>
+    <form method="post" class="d-flex gap-2">{% csrf_token %}<button type="submit" class="btn btn-danger">{% trans "Yes, cancel project" %}</button><a href="{% url 'projects:project-detail' project.pk %}" class="btn btn-outline-secondary">{% trans "Back" %}</a></form>
+</div></div></div></div>
+{% endblock %}

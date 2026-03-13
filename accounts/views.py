@@ -38,11 +38,10 @@ def signup_view(request):
                 role=form.cleaned_data["role"],
                 email=form.cleaned_data.get("email"),
                 phone_number=form.cleaned_data.get("phone_number"),
+                preferred_contact_method=form.cleaned_data.get("preferred_contact_method"),
             )
 
-            if form.cleaned_data.get("preferred_contact_method"):
-                user.preferred_contact_method = form.cleaned_data["preferred_contact_method"]
-                user.save(update_fields=["preferred_contact_method"])
+
 
             request.session["pending_user_id"] = user.id
             messages.success(request, "Verification code was sent successfully.")

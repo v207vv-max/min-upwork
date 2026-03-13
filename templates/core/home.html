@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Home" %}{% endblock %}
+{% block content %}
+<section class="py-5">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <span class="badge badge-soft rounded-pill px-3 py-2 mb-3">{% trans "Freelance Marketplace" %}</span>
+            <h1 class="display-5 fw-bold mb-3">{% trans "Find projects, hire talent, and manage work in one place." %}</h1>
+            <p class="lead text-muted mb-4">{% trans "A clean workspace for clients and freelancers to collaborate through bids, contracts, reviews, and chat." %}</p>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-primary btn-lg" href="{% url 'projects:project-list' %}">{% trans "Browse projects" %}</a>
+                {% if not request.user.is_authenticated %}
+                    <a class="btn btn-outline-secondary btn-lg" href="{% url 'accounts:signup' %}">{% trans "Create account" %}</a>
+                {% else %}
+                    <a class="btn btn-outline-secondary btn-lg" href="{% url 'core:dashboard' %}">{% trans "Open dashboard" %}</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h2 class="h4 mb-3">{% trans "Platform features" %}</h2>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item px-0">{% trans "Project publishing and filtering" %}</li>
+                        <li class="list-group-item px-0">{% trans "Bids and contract lifecycle" %}</li>
+                        <li class="list-group-item px-0">{% trans "Private chat with image sharing" %}</li>
+                        <li class="list-group-item px-0">{% trans "Reviews and account management" %}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

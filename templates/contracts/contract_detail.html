@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Contract detail" %}{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-8"><div class="card"><div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 mb-3"><div><h1 class="h2 mb-1">{{ contract.project.title }}</h1><div class="text-muted">{{ contract.client.username }} • {{ contract.freelancer.username }}</div></div><span class="badge fs-6 status-{{ contract.status }}">{{ contract.get_status_display }}</span></div>
+        <div class="row g-3"><div class="col-md-6"><strong>{% trans "Agreed price" %}</strong><div class="text-muted">{{ contract.agreed_price }}</div></div><div class="col-md-6"><strong>{% trans "Started at" %}</strong><div class="text-muted">{{ contract.started_at|default:"-" }}</div></div><div class="col-md-6"><strong>{% trans "Finished at" %}</strong><div class="text-muted">{{ contract.finished_at|default:"-" }}</div></div><div class="col-md-6"><strong>{% trans "Cancelled at" %}</strong><div class="text-muted">{{ contract.cancelled_at|default:"-" }}</div></div><div class="col-12"><strong>{% trans "Notes" %}</strong><div class="text-muted">{{ contract.notes|default:"-"|linebreaksbr }}</div></div></div>
+    </div></div></div>
+    <div class="col-lg-4"><div class="card"><div class="card-body p-4">
+        <h2 class="h5 mb-3">{% trans "Actions" %}</h2>
+        <div class="d-grid gap-2">
+            {% if request.user == contract.client and contract.is_active %}<a href="{% url 'contracts:contract-finish' contract.pk %}" class="btn btn-success">{% trans "Finish contract" %}</a><a href="{% url 'contracts:contract-cancel' contract.pk %}" class="btn btn-outline-danger">{% trans "Cancel contract" %}</a>{% endif %}
+            {% if contract.status == 'finished' and request.user == contract.client %}<a href="{% url 'reviews:review-create' contract.pk %}" class="btn btn-outline-primary">{% trans "Leave review" %}</a>{% endif %}
+            <a href="{% url 'chat:conversation-list' %}" class="btn btn-outline-secondary">{% trans "Open chat" %}</a>
+        </div>
+    </div></div></div>
+</div>
+{% endblock %}

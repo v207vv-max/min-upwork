@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "My projects" %}{% endblock %}
+{% block content %}
+<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+    <div><h1 class="h2 mb-1">{% trans "My projects" %}</h1><p class="text-muted mb-0">{% trans "Manage projects created by you." %}</p></div>
+    <a href="{% url 'projects:project-create' %}" class="btn btn-primary">{% trans "Create project" %}</a>
+</div>
+<div class="row g-4">
+    {% for project in projects %}
+        <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-3"><h2 class="h5 mb-0"><a class="text-decoration-none" href="{% url 'projects:project-detail' project.pk %}">{{ project.title }}</a></h2><span class="badge text-uppercase status-{{ project.status }}">{{ project.get_status_display }}</span></div>
+            <p class="text-muted">{{ project.description|truncatechars:160 }}</p>
+            <div class="small text-muted mb-3">{{ project.budget }} • {{ project.deadline }}</div>
+            <div class="d-flex flex-wrap gap-2"><a href="{% url 'projects:project-detail' project.pk %}" class="btn btn-sm btn-outline-primary">{% trans "Details" %}</a><a href="{% url 'projects:project-update' project.pk %}" class="btn btn-sm btn-outline-secondary">{% trans "Edit" %}</a><a href="{% url 'bids:project-bids' project.pk %}" class="btn btn-sm btn-outline-dark">{% trans "Bids" %}</a></div>
+        </div></div></div>
+    {% empty %}
+        <div class="col-12"><div class="card"><div class="card-body text-center py-5 text-muted">{% trans "You have not created any projects yet." %}</div></div></div>
+    {% endfor %}
+</div>
+{% endblock %}
