@@ -5,18 +5,21 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import ProjectCreateForm, ProjectUpdateForm
 from .models import Project, ProjectStatus
+from .services import filter_projects, get_project_list_queryset
 
 
 def project_list_view(request):
-    projects = Project.objects.select_related("client").filter(
-        status=ProjectStatus.OPEN,
-        is_active=True,
-    )
+    projects = get_project_list_queryset()
+    projects = filter_projects(projects, request.GET)
 
     return render(
         request,
         "projects/project_list.html",
-        {"projects": projects},
+        {
+            "projects": projects,
+            "filters": request.GET,
+            "project_statuses": ProjectStatus.choices,
+        },
     )
 
 
@@ -38,14 +41,17 @@ def my_projects_view(request):
     if not request.user.is_client:
         raise PermissionDenied("Only clients can view their projects.")
 
-    projects = Project.objects.select_related("client").filter(
-        client=request.user,
-    )
+    projects = Project.objects.select_related("client").filter(client=request.user)
+    projects = filter_projects(projects, request.GET)
 
     return render(
         request,
         "projects/my_projects.html",
-        {"projects": projects},
+        {
+            "projects": projects,
+            "filters": request.GET,
+            "project_statuses": ProjectStatus.choices,
+        },
     )
 
 

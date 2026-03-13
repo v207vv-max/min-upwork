@@ -141,6 +141,7 @@ class ProfileUpdateForm(forms.ModelForm):
             "email",
             "phone_number",
             "bio",
+            'image',
             "preferred_contact_method",
         )
 

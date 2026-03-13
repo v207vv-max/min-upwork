@@ -3,9 +3,11 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .models import Contract
 from .services import cancel_contract, finish_contract
+from django.core.exceptions import ValidationError
 
+
+from .models import Contract, ContractStatus
 
 @login_required
 def contract_list_view(request):
@@ -28,12 +30,30 @@ def contract_list_view(request):
     else:
         raise PermissionDenied("You do not have permission to view contracts.")
 
+    status = (request.GET.get("status") or "").strip()
+    ordering = (request.GET.get("ordering") or "").strip()
+
+    valid_statuses = {choice[0] for choice in ContractStatus.choices}
+    if status in valid_statuses:
+        contracts = contracts.filter(status=status)
+
+    ordering_map = {
+        "newest": "-created_at",
+        "oldest": "created_at",
+        "started_asc": "started_at",
+        "started_desc": "-started_at",
+    }
+    contracts = contracts.order_by(ordering_map.get(ordering, "-created_at"))
+
     return render(
         request,
         "contracts/contract_list.html",
-        {"contracts": contracts},
+        {
+            "contracts": contracts,
+            "filters": request.GET,
+            "contract_statuses": ContractStatus.choices,
+        },
     )
-
 
 @login_required
 def contract_detail_view(request, pk):

@@ -1,3 +1,5 @@
+from decimal import Decimal, InvalidOperation
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -24,7 +26,7 @@ def bid_create_view(request, project_id):
 
     if request.method == "POST" and form.is_valid():
         try:
-            bid = create_bid(
+            create_bid(
                 project=project,
                 freelancer=request.user,
                 proposal=form.cleaned_data["proposal"],
@@ -56,12 +58,50 @@ def my_bids_view(request):
         freelancer=request.user,
     )
 
+    status = (request.GET.get("status") or "").strip()
+    project_id = (request.GET.get("project") or "").strip()
+    min_price = (request.GET.get("min_price") or "").strip()
+    max_price = (request.GET.get("max_price") or "").strip()
+    ordering = (request.GET.get("ordering") or "").strip()
+
+    valid_statuses = {choice[0] for choice in BidStatus.choices}
+    if status in valid_statuses:
+        bids = bids.filter(status=status)
+
+    if project_id.isdigit():
+        bids = bids.filter(project_id=project_id)
+
+    if min_price:
+        try:
+            bids = bids.filter(price__gte=Decimal(min_price))
+        except (InvalidOperation, ValueError):
+            pass
+
+    if max_price:
+        try:
+            bids = bids.filter(price__lte=Decimal(max_price))
+        except (InvalidOperation, ValueError):
+            pass
+
+    ordering_map = {
+        "newest": "-created_at",
+        "oldest": "created_at",
+        "price_asc": "price",
+        "price_desc": "-price",
+        "delivery_asc": "delivery_time_days",
+        "delivery_desc": "-delivery_time_days",
+    }
+    bids = bids.order_by(ordering_map.get(ordering, "-created_at"))
+
     return render(
         request,
         "bids/my_bids.html",
-        {"bids": bids},
+        {
+            "bids": bids,
+            "filters": request.GET,
+            "bid_statuses": BidStatus.choices,
+        },
     )
-
 
 @login_required
 def bid_update_view(request, pk):

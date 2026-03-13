@@ -119,7 +119,7 @@ def profile_view(request):
 
 @login_required
 def profile_update_view(request):
-    form = ProfileUpdateForm(request.POST or None, instance=request.user)
+    form = ProfileUpdateForm(request.POST or None,request.FILES or None, instance=request.user)
 
     if request.method == "POST" and form.is_valid():
         try:

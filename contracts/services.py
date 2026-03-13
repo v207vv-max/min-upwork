@@ -7,12 +7,12 @@ from projects.models import ProjectStatus
 
 from .models import Contract, ContractStatus
 
-
 @transaction.atomic
 def create_contract_from_bid(*, bid):
     """
     Create contract from accepted bid.
     """
+    from chat.services import create_conversation_for_contract
 
     project = bid.project
 
@@ -37,6 +37,8 @@ def create_contract_from_bid(*, bid):
         status=ContractStatus.ACTIVE,
         started_at=timezone.now(),
     )
+
+    create_conversation_for_contract(contract=contract)
 
     return contract
 

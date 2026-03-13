@@ -105,6 +105,7 @@ class User(AbstractUser):
     bio = models.TextField(blank=True)
     is_email_verified = models.BooleanField(default=False)
     is_phone_verified = models.BooleanField(default=False)
+    image = models.ImageField(upload_to="user_images/",default='user_images/default.png', null=True, blank=True)
     preferred_contact_method = models.CharField(
         max_length=10,
         choices=VerificationChannel.choices,

@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'core',
     'projects',
     'reviews',
+    'chat'
 ]
 
 MIDDLEWARE = [
