@@ -16,6 +16,16 @@ class SignUpForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput)
     confirm_password = forms.CharField(widget=forms.PasswordInput)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["preferred_contact_method"].choices = [("", "---------"), *VerificationChannel.choices]
+        self.fields["email"].required = False
+        self.fields["phone_number"].required = False
+        self.fields["preferred_contact_method"].required = False
+        self.fields["email"].widget.attrs["required"] = False
+        self.fields["phone_number"].widget.attrs["required"] = False
+        self.fields["preferred_contact_method"].widget.attrs["required"] = False
+
     def clean_username(self):
         username = self.cleaned_data["username"].strip()
         if User.objects.filter(username=username).exists():

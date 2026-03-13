@@ -20,7 +20,7 @@ def get_project_list_queryset():
     """
     Base queryset for public project list.
     """
-    return Project.objects.select_related("client").all()
+    return Project.objects.select_related("client").filter(is_active=True)
 
 
 def filter_projects(queryset, params):

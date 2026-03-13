@@ -53,7 +53,7 @@ class Project(models.Model):
     def clean(self):
         super().clean()
 
-        if self.client and getattr(self.client, "role", None) != "client":
+        if self.client_id and getattr(self.client, "role", None) != "client":
             raise ValidationError({"client": "Only clients can create projects."})
 
         if self.title:

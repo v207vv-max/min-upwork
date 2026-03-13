@@ -120,20 +120,17 @@ class Message(models.Model):
     def clean(self):
         super().clean()
 
-        if not self.conversation:
-            raise ValidationError("Message must belong to a conversation.")
-
-        if not self.sender:
-            raise ValidationError("Message must have a sender.")
-
-        if not self.conversation.has_participant(self.sender):
-            raise ValidationError("Sender must be a participant of this conversation.")
-
         if self.text:
             self.text = self.text.strip()
 
         if not self.text and not self.image:
             raise ValidationError("Message must contain text or image.")
+
+        if not self.conversation_id or not self.sender_id:
+            return
+
+        if not self.conversation.has_participant(self.sender):
+            raise ValidationError("Sender must be a participant of this conversation.")
 
         if self.conversation.contract.status == ContractStatus.CANCELLED:
             raise ValidationError("You cannot send messages in a cancelled contract chat.")

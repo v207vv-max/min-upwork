@@ -1,9 +1,17 @@
 from django.db.models import Avg, Count
-
+from datetime import date, timedelta
 from bids.models import Bid, BidStatus
 from contracts.models import Contract, ContractStatus
 from projects.models import Project, ProjectStatus
 from reviews.models import Review
+
+
+
+
+from django.db.models.functions import TruncDate
+from django.utils import timezone
+
+
 
 
 def get_client_dashboard_data(user):
@@ -109,4 +117,120 @@ def get_dashboard_data(user):
         "bids": {},
         "contracts": {},
         "reviews": {},
+    }
+
+
+def _get_period_range(period: str):
+    """
+    Return start_date and end_date for supported dashboard periods.
+    end_date is inclusive.
+    """
+    today = timezone.localdate()
+
+    if period == "week":
+        start_date = today - timedelta(days=6)
+        end_date = today
+        return start_date, end_date
+
+    if period == "month":
+        start_date = today - timedelta(days=29)
+        end_date = today
+        return start_date, end_date
+
+    if period == "last_month":
+        first_day_this_month = today.replace(day=1)
+        end_date = first_day_this_month - timedelta(days=1)
+        start_date = end_date.replace(day=1)
+        return start_date, end_date
+
+    start_date = today - timedelta(days=6)
+    end_date = today
+    return start_date, end_date
+
+
+def _build_daily_series(queryset, start_date: date, end_date: date):
+    """
+    Convert queryset with created_at into daily labels and values.
+    Missing days are filled with 0.
+    """
+    rows = (
+        queryset.filter(created_at__date__range=(start_date, end_date))
+        .annotate(day=TruncDate("created_at"))
+        .values("day")
+        .annotate(count=Count("id"))
+        .order_by("day")
+    )
+
+    counts_by_day = {row["day"]: row["count"] for row in rows}
+
+    labels = []
+    values = []
+
+    current_day = start_date
+    while current_day <= end_date:
+        labels.append(current_day.strftime("%d %b"))
+        values.append(counts_by_day.get(current_day, 0))
+        current_day += timedelta(days=1)
+
+    return labels, values
+
+
+def get_activity_chart_data(user, period: str = "week"):
+    """
+    Return activity statistics by day for dashboard charts.
+
+    Client  -> projects created per day
+    Freelancer -> bids sent per day
+    """
+    if not user.is_authenticated:
+        return {
+            "period": period,
+            "metric": None,
+            "label": "",
+            "labels": [],
+            "values": [],
+            "total": 0,
+        }
+
+    start_date, end_date = _get_period_range(period)
+
+    if getattr(user, "is_client", False):
+        queryset = Project.objects.filter(client=user)
+        labels, values = _build_daily_series(queryset, start_date, end_date)
+
+        return {
+            "period": period,
+            "metric": "projects",
+            "label": "Созданные проекты",
+            "labels": labels,
+            "values": values,
+            "total": sum(values),
+            "start_date": start_date,
+            "end_date": end_date,
+        }
+
+    if getattr(user, "is_freelancer", False):
+        queryset = Bid.objects.filter(freelancer=user)
+        labels, values = _build_daily_series(queryset, start_date, end_date)
+
+        return {
+            "period": period,
+            "metric": "bids",
+            "label": "Отправленные отклики",
+            "labels": labels,
+            "values": values,
+            "total": sum(values),
+            "start_date": start_date,
+            "end_date": end_date,
+        }
+
+    return {
+        "period": period,
+        "metric": None,
+        "label": "",
+        "labels": [],
+        "values": [],
+        "total": 0,
+        "start_date": start_date,
+        "end_date": end_date,
     }

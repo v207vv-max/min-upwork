@@ -1,35 +1,295 @@
 {% extends "base.html" %}
 {% load i18n %}
+
 {% block title %}{% trans "Dashboard" %}{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div>
         <h1 class="h2 mb-1">{% trans "Dashboard" %}</h1>
         <p class="text-muted mb-0">{% trans "Overview of your activity on the platform." %}</p>
     </div>
+
+    <div class="d-flex gap-2">
+        <a href="?period=week"
+           class="btn btn-sm {% if selected_period == 'week' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            {% trans "Week" %}
+        </a>
+        <a href="?period=month"
+           class="btn btn-sm {% if selected_period == 'month' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            {% trans "Month" %}
+        </a>
+        <a href="?period=last_month"
+           class="btn btn-sm {% if selected_period == 'last_month' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            {% trans "Last month" %}
+        </a>
+    </div>
 </div>
+
 {% if dashboard.role == "client" %}
     <div class="row g-4 mb-4">
-        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h6 text-muted">{% trans "Total projects" %}</h2><div class="display-6">{{ dashboard.projects.total }}</div></div></div></div>
-        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h6 text-muted">{% trans "Active contracts" %}</h2><div class="display-6">{{ dashboard.contracts.active }}</div></div></div></div>
-        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h6 text-muted">{% trans "Written reviews" %}</h2><div class="display-6">{{ dashboard.reviews.written }}</div></div></div></div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">{% trans "Total projects" %}</h2>
+                    <div class="display-6">{{ dashboard.projects.total }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">{% trans "Active contracts" %}</h2>
+                    <div class="display-6">{{ dashboard.contracts.active }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">{% trans "Written reviews" %}</h2>
+                    <div class="display-6">{{ dashboard.reviews.written }}</div>
+                </div>
+            </div>
+        </div>
     </div>
+
 {% elif dashboard.role == "freelancer" %}
     <div class="row g-4 mb-4">
-        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h6 text-muted">{% trans "Total bids" %}</h2><div class="display-6">{{ dashboard.bids.total }}</div></div></div></div>
-        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h6 text-muted">{% trans "Active contracts" %}</h2><div class="display-6">{{ dashboard.contracts.active }}</div></div></div></div>
-        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h6 text-muted">{% trans "Average rating" %}</h2><div class="display-6">{{ dashboard.reviews.average_rating|default:"-" }}</div></div></div></div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">{% trans "Total bids" %}</h2>
+                    <div class="display-6">{{ dashboard.bids.total }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">{% trans "Active contracts" %}</h2>
+                    <div class="display-6">{{ dashboard.contracts.active }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="h6 text-muted">{% trans "Average rating" %}</h2>
+                    <div class="display-6">{{ dashboard.reviews.average_rating|default:"-" }}</div>
+                </div>
+            </div>
+        </div>
     </div>
 {% endif %}
-<div class="card">
-    <div class="card-body p-4">
-        <h2 class="h5 mb-3">{% trans "Quick actions" %}</h2>
-        <div class="d-flex flex-wrap gap-2">
-            <a href="{% url 'projects:project-list' %}" class="btn btn-outline-primary">{% trans "Projects" %}</a>
-            <a href="{% url 'contracts:contract-list' %}" class="btn btn-outline-secondary">{% trans "Contracts" %}</a>
-            <a href="{% url 'chat:conversation-list' %}" class="btn btn-outline-dark">{% trans "Chat" %}</a>
-            <a href="{% url 'accounts:profile' %}" class="btn btn-outline-success">{% trans "Profile" %}</a>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+                <h2 class="h5 mb-1">{{ activity_chart.label }}</h2>
+                <p class="text-muted mb-0">
+                    {% trans "Total for selected period:" %} <strong>{{ activity_chart.total }}</strong>
+                </p>
+            </div>
+            <div class="text-muted small">
+                {{ activity_chart.start_date }} — {{ activity_chart.end_date }}
+            </div>
+        </div>
+
+        <div style="height: 320px;">
+            <canvas id="activityChart"></canvas>
         </div>
     </div>
 </div>
+
+<div class="row g-4">
+    {% if dashboard.role == "client" %}
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">{% trans "Recent projects" %}</h2>
+
+                    {% if dashboard.recent_projects %}
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "Title" %}</th>
+                                        <th>{% trans "Budget" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for project in dashboard.recent_projects %}
+                                        <tr>
+                                            <td>{{ project.title }}</td>
+                                            <td>{{ project.budget }}</td>
+                                            <td>{{ project.get_status_display|default:project.status }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">{% trans "No recent projects." %}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">{% trans "Recent contracts" %}</h2>
+
+                    {% if dashboard.recent_contracts %}
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "Project" %}</th>
+                                        <th>{% trans "Freelancer" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for contract in dashboard.recent_contracts %}
+                                        <tr>
+                                            <td>{{ contract.project.title }}</td>
+                                            <td>{{ contract.freelancer.username }}</td>
+                                            <td>{{ contract.get_status_display|default:contract.status }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">{% trans "No recent contracts." %}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    {% elif dashboard.role == "freelancer" %}
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">{% trans "Recent bids" %}</h2>
+
+                    {% if dashboard.recent_bids %}
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "Project" %}</th>
+                                        <th>{% trans "Price" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bid in dashboard.recent_bids %}
+                                        <tr>
+                                            <td>{{ bid.project.title }}</td>
+                                            <td>{{ bid.price }}</td>
+                                            <td>{{ bid.get_status_display|default:bid.status }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">{% trans "No recent bids." %}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">{% trans "Recent contracts" %}</h2>
+
+                    {% if dashboard.recent_contracts %}
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "Project" %}</th>
+                                        <th>{% trans "Client" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for contract in dashboard.recent_contracts %}
+                                        <tr>
+                                            <td>{{ contract.project.title }}</td>
+                                            <td>{{ contract.client.username }}</td>
+                                            <td>{{ contract.get_status_display|default:contract.status }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">{% trans "No recent contracts." %}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const activityLabels = [
+        {% for label in activity_chart.labels %}
+            "{{ label }}"{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    const activityValues = [
+        {% for value in activity_chart.values %}
+            {{ value }}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    const ctx = document.getElementById("activityChart");
+
+    if (ctx) {
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: activityLabels,
+                datasets: [{
+                    label: "{{ activity_chart.label|escapejs }}",
+                    data: activityValues,
+                    borderWidth: 1,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
 {% endblock %}

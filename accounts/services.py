@@ -38,6 +38,7 @@ def create_verification_code(*, user, channel, purpose, target):
             code=code,
             purpose=purpose,
         )
+        print(f'----------------------------{code}')
     else:
         # Phone delivery is intentionally not implemented for this project.
         # We keep the field and channel for architecture completeness.

@@ -65,13 +65,13 @@ class Bid(models.Model):
     def clean(self):
         super().clean()
 
-        if self.freelancer and getattr(self.freelancer, "role", None) != "freelancer":
+        if self.freelancer_id and getattr(self.freelancer, "role", None) != "freelancer":
             raise ValidationError({"freelancer": "Only freelancers can create bids."})
 
-        if self.project and self.project.client_id == self.freelancer_id:
+        if self.project_id and self.freelancer_id and self.project.client_id == self.freelancer_id:
             raise ValidationError({"freelancer": "You cannot bid on your own project."})
 
-        if self.project:
+        if self.project_id:
             if self.project.status != ProjectStatus.OPEN:
                 raise ValidationError({"project": "You can only bid on open projects."})
 

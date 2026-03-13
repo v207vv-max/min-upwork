@@ -7,7 +7,6 @@
         </button>
         <div class="collapse navbar-collapse" id="mainNavbar">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link" href="{% url 'core:home' %}">{% trans "Home" %}</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'projects:project-list' %}">{% trans "Projects" %}</a></li>
                 {% if request.user.is_authenticated %}
                     {% if request.user.is_client %}
@@ -24,6 +23,7 @@
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <form action="/i18n/setlang/" method="post" class="d-flex align-items-center gap-2">
                     {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
                     <label class="text-white small" for="language-switcher">{% trans "Language" %}</label>
                     <select id="language-switcher" name="language" class="form-select form-select-sm" onchange="this.form.submit()">
                         <option value="ru" {% if LANGUAGE_CODE == 'ru' %}selected{% endif %}>Русский</option>

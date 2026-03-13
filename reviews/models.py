@@ -60,17 +60,22 @@ class Review(models.Model):
     def clean(self):
         super().clean()
 
-        if not self.contract:
-            raise ValidationError("Review must be linked to a contract.")
+        if self.comment:
+            self.comment = self.comment.strip()
 
-        if not self.project:
-            raise ValidationError("Review must be linked to a project.")
+        if self.rating < 1 or self.rating > 5:
+            raise ValidationError({"rating": "Rating must be between 1 and 5."})
 
-        if not self.client:
-            raise ValidationError("Review must have a client.")
+        if not self.comment:
+            raise ValidationError({"comment": "Comment cannot be empty."})
 
-        if not self.freelancer:
-            raise ValidationError("Review must have a freelancer.")
+        if len(self.comment) < 10:
+            raise ValidationError(
+                {"comment": "Comment must contain at least 10 characters."}
+            )
+
+        if not self.contract_id or not self.project_id or not self.client_id or not self.freelancer_id:
+            return
 
         if self.contract.status != ContractStatus.FINISHED:
             raise ValidationError("Review can only be created for a finished contract.")
@@ -89,20 +94,6 @@ class Review(models.Model):
 
         if getattr(self.freelancer, "role", None) != "freelancer":
             raise ValidationError("Review can only be written for a freelancer.")
-
-        if self.rating < 1 or self.rating > 5:
-            raise ValidationError({"rating": "Rating must be between 1 and 5."})
-
-        if self.comment:
-            self.comment = self.comment.strip()
-
-        if not self.comment:
-            raise ValidationError({"comment": "Comment cannot be empty."})
-
-        if len(self.comment) < 10:
-            raise ValidationError(
-                {"comment": "Comment must contain at least 10 characters."}
-            )
 
     def save(self, *args, **kwargs):
         self.full_clean()

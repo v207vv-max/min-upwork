@@ -28,6 +28,7 @@
 </div>
 <div class="row g-4">
     {% for project in projects %}
+        {% if project.is_active %}
         <div class="col-lg-6">
             <div class="card h-100">
                 <div class="card-body">
@@ -41,6 +42,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
     {% empty %}
         <div class="col-12"><div class="card"><div class="card-body text-center py-5"><h2 class="h4">{% trans "No projects found" %}</h2><p class="text-muted mb-0">{% trans "Try changing filters or create a new project." %}</p></div></div></div>
     {% endfor %}
