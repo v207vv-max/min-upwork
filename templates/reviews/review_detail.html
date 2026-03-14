@@ -3,7 +3,7 @@
 {% block title %}{% trans "Review detail" %}{% endblock %}
 {% block content %}
 <div class="row justify-content-center"><div class="col-lg-8"><div class="card"><div class="card-body p-4">
-    <div class="d-flex justify-content-between align-items-start gap-3 mb-3"><div><h1 class="h3 mb-1">{{ review.freelancer.username }}</h1><div class="text-muted">{{ review.project.title }}</div></div><span class="badge status-{{ review.sentiment }}">{{ review.rating }}/5</span></div>
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-3"><div><h1 class="h3 mb-1"><a class="text-decoration-none" href="{% url 'accounts:freelancer-profile' review.freelancer.pk %}">{{ review.freelancer.username }}</a></h1><div class="text-muted">{{ review.project.title }}</div></div><span class="badge status-{{ review.sentiment }}">{{ review.rating }}/5</span></div>
     <div class="mb-3"><strong>{% trans "Rating" %}</strong>: {{ review.rating }}/5</div>
     <p>{{ review.comment|linebreaksbr }}</p>
     {% if request.user == review.client %}<a href="{% url 'reviews:review-update' review.pk %}" class="btn btn-outline-primary">{% trans "Edit review" %}</a>{% endif %}

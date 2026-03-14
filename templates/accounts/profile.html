@@ -9,6 +9,22 @@
                 {% if user_obj.image %}<img src="{{ user_obj.image.url }}" alt="{{ user_obj.username }}" class="rounded-circle img-fluid mb-3" style="width: 140px; height: 140px; object-fit: cover;">{% endif %}
                 <h1 class="h4 mb-1">{{ user_obj.username }}</h1>
                 <p class="text-muted mb-3">{{ user_obj.get_role_display }}</p>
+                {% if user_obj.is_freelancer and freelancer_stats %}
+                    <div class="row g-2 text-start mb-3">
+                        <div class="col-6">
+                            <div class="border rounded p-2 h-100">
+                                <div class="small text-muted">{% trans "Rating" %}</div>
+                                <div class="fw-semibold">{% if freelancer_stats.average_rating %}{{ freelancer_stats.average_rating }}/5{% else %}{% trans "No reviews yet" %}{% endif %}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-2 h-100">
+                                <div class="small text-muted">{% trans "Completed orders" %}</div>
+                                <div class="fw-semibold">{{ freelancer_stats.completed_orders }}</div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
                 <a href="{% url 'accounts:profile-update' %}" class="btn btn-primary w-100 mb-2">{% trans "Edit profile" %}</a>
                 <a href="{% url 'accounts:change-password' %}" class="btn btn-outline-secondary w-100">{% trans "Change password" %}</a>
             </div>
@@ -23,6 +39,10 @@
                     <div class="col-md-6"><strong>{% trans "Role" %}</strong><div class="text-muted">{{ user_obj.get_role_display }}</div></div>
                     <div class="col-md-6"><strong>{% trans "Email" %}</strong><div class="text-muted">{{ user_obj.email|default:"-" }}</div></div>
                     <div class="col-md-6"><strong>{% trans "Phone" %}</strong><div class="text-muted">{{ user_obj.phone_number|default:"-" }}</div></div>
+                    {% if user_obj.is_freelancer and freelancer_stats %}
+                        <div class="col-md-6"><strong>{% trans "Review count" %}</strong><div class="text-muted">{{ freelancer_stats.review_count }}</div></div>
+                        <div class="col-md-6"><strong>{% trans "Completed orders" %}</strong><div class="text-muted">{{ freelancer_stats.completed_orders }}</div></div>
+                    {% endif %}
                     <div class="col-12"><strong>{% trans "Bio" %}</strong><div class="text-muted">{{ user_obj.bio|default:"-"|linebreaksbr }}</div></div>
                 </div>
             </div>

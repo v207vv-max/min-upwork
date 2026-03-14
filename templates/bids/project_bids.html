@@ -10,7 +10,7 @@
     {% for bid in bids %}
         <div class="col-lg-6"><div class="card h-100"><div class="card-body">
             <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
-                <div><h2 class="h5 mb-1">{{ bid.freelancer.username }}</h2><div class="text-muted small">{{ bid.price }} • {{ bid.delivery_time_days }} {% trans "days" %}</div></div>
+                <div><h2 class="h5 mb-1"><a class="text-decoration-none" href="{% url 'accounts:freelancer-profile' bid.freelancer.pk %}">{{ bid.freelancer.username }}</a></h2><div class="text-muted small">{{ bid.price }} • {{ bid.delivery_time_days }} {% trans "days" %}</div></div>
                 <span class="badge status-{{ bid.status }}">{{ bid.get_status_display }}</span>
             </div>
             <p class="text-muted">{{ bid.proposal|truncatechars:180 }}</p>

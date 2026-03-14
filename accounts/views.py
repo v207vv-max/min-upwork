@@ -2,8 +2,12 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.db.models import Avg, Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext_lazy as _
+
+from contracts.models import Contract, ContractStatus
+from reviews.models import Review
 
 from .forms import (
     ChangePasswordForm,
@@ -14,7 +18,7 @@ from .forms import (
     SignUpForm,
     VerifyCodeForm,
 )
-from .models import User
+from .models import User, UserRole
 from .services import (
     authenticate_user,
     change_password,
@@ -23,6 +27,24 @@ from .services import (
     reset_password,
     verify_signup_code,
 )
+
+
+def _get_freelancer_stats(user):
+    review_summary = Review.objects.filter(freelancer=user).aggregate(
+        average_rating=Avg("rating"),
+        review_count=Count("id"),
+    )
+    completed_orders = Contract.objects.filter(
+        freelancer=user,
+        status=ContractStatus.FINISHED,
+    ).count()
+
+    average_rating = review_summary["average_rating"]
+    return {
+        "average_rating": round(float(average_rating), 1) if average_rating is not None else None,
+        "review_count": review_summary["review_count"],
+        "completed_orders": completed_orders,
+    }
 
 
 def signup_view(request):
@@ -114,7 +136,26 @@ def logout_view(request):
 
 @login_required
 def profile_view(request):
-    return render(request, "accounts/profile.html", {"user_obj": request.user})
+    context = {"user_obj": request.user}
+    if request.user.is_freelancer:
+        context["freelancer_stats"] = _get_freelancer_stats(request.user)
+    return render(request, "accounts/profile.html", context)
+
+
+@login_required
+def freelancer_profile_view(request, pk):
+    freelancer = get_object_or_404(
+        User.objects.filter(role=UserRole.FREELANCER),
+        pk=pk,
+    )
+    return render(
+        request,
+        "accounts/freelancer_profile.html",
+        {
+            "freelancer": freelancer,
+            "freelancer_stats": _get_freelancer_stats(freelancer),
+        },
+    )
 
 
 @login_required
