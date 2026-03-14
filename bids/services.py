@@ -9,9 +9,7 @@ from contracts.services import create_contract_from_bid
 
 
 def create_bid(*, project, freelancer, proposal, price, delivery_time_days):
-    """
-    Create a new bid for an open active project.
-    """
+
 
     if getattr(freelancer, "role", None) != "freelancer":
         raise ValidationError(_("Only freelancers can create bids."))
@@ -74,9 +72,7 @@ def accept_bid(*, bid, client):
 
 
 def update_bid(*, bid, freelancer, proposal, price, delivery_time_days):
-    """
-    Update an existing bid.
-    """
+
 
     if bid.freelancer != freelancer:
         raise ValidationError(_("You can update only your own bid."))
@@ -93,9 +89,7 @@ def update_bid(*, bid, freelancer, proposal, price, delivery_time_days):
 
 
 def withdraw_bid(*, bid, freelancer):
-    """
-    Withdraw a pending bid.
-    """
+
 
     if bid.freelancer != freelancer:
         raise ValidationError(_("You can withdraw only your own bid."))
@@ -110,9 +104,7 @@ def withdraw_bid(*, bid, freelancer):
 
 
 def reject_bid(*, bid, client):
-    """
-    Reject a pending bid.
-    """
+
 
     if bid.project.client != client:
         raise ValidationError(_("You can reject bids only for your own projects."))

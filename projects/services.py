@@ -17,26 +17,12 @@ PROJECT_ORDERING_CHOICES = {
 
 
 def get_project_list_queryset():
-    """
-    Base queryset for public project list.
-    """
+
     return Project.objects.select_related("client").filter(is_active=True)
 
 
 def filter_projects(queryset, params):
-    """
-    Apply search, filters, and ordering to project queryset.
 
-    Supported params:
-    - q
-    - status
-    - min_budget
-    - max_budget
-    - deadline_from
-    - deadline_to
-    - ordering
-    - is_active
-    """
 
     q = (params.get("q") or "").strip()
     status = (params.get("status") or "").strip()

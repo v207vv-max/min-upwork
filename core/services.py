@@ -15,9 +15,7 @@ from django.utils import timezone
 
 
 def get_client_dashboard_data(user):
-    """
-    Build dashboard statistics for a client user.
-    """
+
 
     projects = Project.objects.filter(client=user)
     contracts = Contract.objects.filter(client=user)
@@ -53,9 +51,7 @@ def get_client_dashboard_data(user):
 
 
 def get_freelancer_dashboard_data(user):
-    """
-    Build dashboard statistics for a freelancer user.
-    """
+
 
     bids = Bid.objects.filter(freelancer=user)
     contracts = Contract.objects.filter(freelancer=user)
@@ -98,9 +94,7 @@ def get_freelancer_dashboard_data(user):
 
 
 def get_dashboard_data(user):
-    """
-    Return dashboard data based on user role.
-    """
+
 
     if not user.is_authenticated:
         return None
@@ -121,10 +115,7 @@ def get_dashboard_data(user):
 
 
 def _get_period_range(period: str):
-    """
-    Return start_date and end_date for supported dashboard periods.
-    end_date is inclusive.
-    """
+
     today = timezone.localdate()
 
     if period == "week":
@@ -149,10 +140,7 @@ def _get_period_range(period: str):
 
 
 def _build_daily_series(queryset, start_date: date, end_date: date):
-    """
-    Convert queryset with created_at into daily labels and values.
-    Missing days are filled with 0.
-    """
+
     rows = (
         queryset.filter(created_at__date__range=(start_date, end_date))
         .annotate(day=TruncDate("created_at"))
@@ -176,12 +164,7 @@ def _build_daily_series(queryset, start_date: date, end_date: date):
 
 
 def get_activity_chart_data(user, period: str = "week"):
-    """
-    Return activity statistics by day for dashboard charts.
 
-    Client  -> projects created per day
-    Freelancer -> bids sent per day
-    """
     if not user.is_authenticated:
         return {
             "period": period,

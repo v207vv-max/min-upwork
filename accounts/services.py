@@ -15,13 +15,15 @@ from .models import (
     VerificationPurpose,
     VerificationStatus,
 )
+
+
 def generate_code():
-    """Generate 6 digit verification code."""
+
     return str(random.randint(100000, 999999))
 
 
 def create_verification_code(*, user, channel, purpose, target):
-    """Create verification code object and deliver it."""
+
     code = generate_code()
 
     verification = VerificationCode.objects.create(
@@ -61,7 +63,7 @@ def register_user(
     phone_number=None,
     preferred_contact_method=None,
 ):
-    """Register user and send verification code."""
+
 
     if not email and not phone_number:
         raise ValidationError(_("Email or phone number must be provided"))
@@ -91,26 +93,46 @@ def register_user(
     return user
 
 
-# ===============================
-# VERIFY SIGNUP
-# ===============================
-
-def verify_signup_code(*, user, code):
-    """Verify signup code and activate user."""
-
-    try:
-        verification = VerificationCode.objects.get(
+def _get_pending_verification(*, user, purpose):
+    verification = (
+        VerificationCode.objects.filter(
             user=user,
-            code=code,
-            purpose=VerificationPurpose.SIGNUP,
+            purpose=purpose,
             status=VerificationStatus.NEW,
         )
-    except VerificationCode.DoesNotExist:
+        .order_by("-created_at")
+        .first()
+    )
+
+    if not verification:
         raise ValidationError(_("Invalid verification code"))
 
     if verification.is_expired:
         verification.mark_expired()
         raise ValidationError(_("Verification code expired"))
+
+    if not verification.can_be_used:
+        verification.mark_cancelled()
+        raise ValidationError(_("Verification code can no longer be used"))
+
+    return verification
+
+
+# ===============================
+# VERIFY SIGNUP
+# ===============================
+
+def verify_signup_code(*, user, code):
+
+
+    verification = _get_pending_verification(
+        user=user,
+        purpose=VerificationPurpose.SIGNUP,
+    )
+
+    if verification.code != code:
+        verification.increase_attempts()
+        raise ValidationError(_("Invalid verification code"))
 
     verification.mark_used()
 
@@ -132,9 +154,7 @@ def verify_signup_code(*, user, code):
 # ===============================
 
 def authenticate_user(identifier, password):
-    """
-    Login by username, email or phone.
-    """
+
 
     user = (
         User.objects.filter(username=identifier).first()
@@ -161,9 +181,7 @@ def authenticate_user(identifier, password):
 # ===============================
 
 def request_password_reset(identifier):
-    """
-    Send reset password code.
-    """
+
 
     user = (
         User.objects.filter(username=identifier).first()
@@ -195,21 +213,16 @@ def request_password_reset(identifier):
 # ===============================
 
 def reset_password(*, user, code, new_password):
-    """Reset password using verification code."""
 
-    try:
-        verification = VerificationCode.objects.get(
-            user=user,
-            code=code,
-            purpose=VerificationPurpose.RESET_PASSWORD,
-            status=VerificationStatus.NEW,
-        )
-    except VerificationCode.DoesNotExist:
+
+    verification = _get_pending_verification(
+        user=user,
+        purpose=VerificationPurpose.RESET_PASSWORD,
+    )
+
+    if verification.code != code:
+        verification.increase_attempts()
         raise ValidationError(_("Invalid verification code"))
-
-    if verification.is_expired:
-        verification.mark_expired()
-        raise ValidationError(_("Verification code expired"))
 
     verification.mark_used()
 
@@ -224,7 +237,7 @@ def reset_password(*, user, code, new_password):
 # ===============================
 
 def change_password(*, user, old_password, new_password):
-    """Change password for logged in user."""
+
 
     if not user.check_password(old_password):
         raise ValidationError(_("Old password is incorrect"))
@@ -235,11 +248,7 @@ def change_password(*, user, old_password, new_password):
     return user
 
 def resolve_contact_channel_and_target(*, email=None, phone_number=None, preferred_contact_method=None):
-    """
-    For this project we use email as the real delivery channel.
-    If email exists, always send there.
-    Fallback to phone only as stored metadata if email does not exist.
-    """
+
 
     if email:
         return VerificationChannel.EMAIL, email
@@ -251,9 +260,7 @@ def resolve_contact_channel_and_target(*, email=None, phone_number=None, preferr
 
 
 def send_verification_code_email(*, to_email, code, purpose):
-    """
-    Send verification code to email.
-    """
+
     subject = "Your verification code"
     message = (
         f"Your verification code for {purpose} is: {code}\n\n"

@@ -9,9 +9,7 @@ from .models import Review
 
 @transaction.atomic
 def create_review(*, contract, client, rating, comment):
-    """
-    Create a review for a finished contract.
-    """
+
 
     if contract.client != client:
         raise ValidationError(_("You can create a review only for your own contract."))
@@ -36,9 +34,7 @@ def create_review(*, contract, client, rating, comment):
 
 @transaction.atomic
 def update_review(*, review, client, rating, comment):
-    """
-    Update an existing review.
-    """
+
 
     if review.client != client:
         raise ValidationError(_("You can update only your own review."))

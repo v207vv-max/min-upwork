@@ -102,7 +102,6 @@ def review_update_view(request, pk):
     )
 
 
-@login_required
 def review_detail_view(request, pk):
     review = get_object_or_404(
         Review.objects.select_related(
@@ -113,12 +112,6 @@ def review_detail_view(request, pk):
         ),
         pk=pk,
     )
-
-    is_client_owner = review.client == request.user
-    is_freelancer_owner = review.freelancer == request.user
-
-    if not (is_client_owner or is_freelancer_owner):
-        raise PermissionDenied(_("You do not have permission to view this review."))
 
     return render(
         request,

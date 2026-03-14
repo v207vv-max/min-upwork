@@ -9,9 +9,7 @@ from .models import Conversation, Message
 
 @transaction.atomic
 def create_conversation_for_contract(*, contract):
-    """
-    Create a conversation for a contract.
-    """
+
 
     if hasattr(contract, "conversation"):
         raise ValidationError(_("Conversation for this contract already exists."))
@@ -27,9 +25,7 @@ def create_conversation_for_contract(*, contract):
 
 @transaction.atomic
 def send_message(*, conversation, sender, text="", image=None):
-    """
-    Send a message in a conversation.
-    """
+
 
     if not conversation.has_participant(sender):
         raise ValidationError(_("Only conversation participants can send messages."))
@@ -54,9 +50,7 @@ def send_message(*, conversation, sender, text="", image=None):
 
 @transaction.atomic
 def mark_conversation_as_read(*, conversation, user):
-    """
-    Mark unread messages in a conversation as read for the current user.
-    """
+
 
     if not conversation.has_participant(user):
         raise ValidationError(_("Only conversation participants can access this chat."))
