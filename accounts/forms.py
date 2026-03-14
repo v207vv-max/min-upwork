@@ -111,19 +111,42 @@ class ResetPasswordForm(forms.Form):
     new_password = forms.CharField(widget=forms.PasswordInput)
     confirm_password = forms.CharField(widget=forms.PasswordInput)
 
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
     def clean_code(self):
         code = self.cleaned_data["code"].strip()
+
         if not code:
             raise ValidationError(_("Code is required."))
+
         return code
 
     def clean(self):
         cleaned_data = super().clean()
+
         new_password = cleaned_data.get("new_password")
         confirm_password = cleaned_data.get("confirm_password")
 
-        if new_password and confirm_password and new_password != confirm_password:
+        if not new_password:
+            raise ValidationError(_("New password is required."))
+
+        if not confirm_password:
+            raise ValidationError(_("Confirm password is required."))
+
+        if new_password != confirm_password:
             raise ValidationError(_("Passwords do not match."))
+
+        if self.user and self.user.check_password(new_password):
+            raise ValidationError(
+                _("New password cannot be the same as the old password.")
+            )
+
+        if len(new_password) < 8:
+            raise ValidationError(
+                _("Password must contain at least 8 characters.")
+            )
 
         return cleaned_data
 

@@ -162,7 +162,7 @@ def reset_password_view(request):
         return redirect("accounts:forgot-password")
 
     user = get_object_or_404(User, id=user_id)
-    form = ResetPasswordForm(request.POST or None)
+    form = ResetPasswordForm(request.POST or None, user=user)
 
     if request.method == "POST" and form.is_valid():
         try:
