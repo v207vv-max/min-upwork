@@ -192,6 +192,32 @@
     {% endfor %}
 </div>
 
+{% if page_obj.paginator.num_pages > 1 %}
+    <nav class="mt-4" aria-label="{% trans 'Projects pagination' %}">
+        <ul class="pagination justify-content-center flex-wrap">
+            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                <a class="page-link" href="{% if page_obj.has_previous %}?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.previous_page_number }}{% else %}#{% endif %}">
+                    {% trans "Previous" %}
+                </a>
+            </li>
+
+            {% for page_number in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_number == page_obj.number %}active{% endif %}">
+                    <a class="page-link" href="?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_number }}">
+                        {{ page_number }}
+                    </a>
+                </li>
+            {% endfor %}
+
+            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                <a class="page-link" href="{% if page_obj.has_next %}?{% if query_string %}{{ query_string }}&{% endif %}page={{ page_obj.next_page_number }}{% else %}#{% endif %}">
+                    {% trans "Next" %}
+                </a>
+            </li>
+        </ul>
+    </nav>
+{% endif %}
+
 <style>
     .project-card {
         transition: transform 0.18s ease, box-shadow 0.18s ease;

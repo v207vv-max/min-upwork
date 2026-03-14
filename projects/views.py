@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext_lazy as _
@@ -12,14 +13,20 @@ from .services import filter_projects, get_project_list_queryset
 def project_list_view(request):
     projects = get_project_list_queryset()
     projects = filter_projects(projects, request.GET)
+    paginator = Paginator(projects, 6)
+    page_obj = paginator.get_page(request.GET.get("page"))
+    query_params = request.GET.copy()
+    query_params.pop("page", None)
 
     return render(
         request,
         "projects/project_list.html",
         {
-            "projects": projects,
+            "projects": page_obj,
+            "page_obj": page_obj,
             "filters": request.GET,
             "project_statuses": ProjectStatus.choices,
+            "query_string": query_params.urlencode(),
         },
     )
 
